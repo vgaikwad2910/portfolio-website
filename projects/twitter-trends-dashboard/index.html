@@ -66,8 +66,28 @@ td{padding:.75rem;border-bottom:1px solid rgba(51,65,85,.4)}
 .donut-legend{display:flex;flex-direction:column;gap:.5rem}
 .donut-legend-item{display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--tx2)}
 .donut-legend-item .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.bar-chart{display:flex;align-items:flex-end;gap:1rem;justify-content:center;height:220px;padding:1rem 0}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:.5rem;flex:1;max-width:100px}
+.bar-col .bar-fill{width:100%;border-radius:6px 6px 0 0;min-height:4px;transition:height .6s ease;position:relative}
+.bar-col .bar-val{font-size:.8rem;font-weight:700;color:var(--tx)}
+.bar-col .bar-label{font-size:.75rem;color:var(--tx2);font-weight:600}
+
+.sent-bar-chart{display:flex;align-items:center;gap:1rem;justify-content:center;height:260px;padding:1rem 0}
+.sent-col{display:flex;flex-direction:column;align-items:center;gap:.5rem;flex:1;max-width:100px;justify-content:center;height:100%}
+.sent-col .sent-bar-wrapper{height:180px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.sent-col .sent-fill{width:60%;border-radius:4px;transition:height .6s ease}
+.sent-col .sent-val{font-size:.75rem;font-weight:700;margin-top:4px}
+.sent-col .bar-label{font-size:.75rem;color:var(--tx2);font-weight:600}
+
+.heatmap{display:grid;grid-template-columns:42px repeat(24,1fr);gap:2px;font-size:.65rem}
+.hm-label{display:flex;align-items:center;justify-content:flex-end;padding-right:6px;color:var(--tx2);font-weight:600;font-size:.7rem}
+.hm-hour{display:flex;align-items:flex-end;justify-content:center;color:var(--tx2);font-weight:500;padding-bottom:4px;font-size:.65rem}
+.hm-cell{border-radius:3px;aspect-ratio:1;min-height:16px;transition:all .2s;cursor:default}
+.hm-cell:hover{transform:scale(1.3);z-index:1;box-shadow:0 0 8px rgba(99,102,241,.5)}
+.hm-spacer{height:20px}
+
 .footer{text-align:center;padding:3rem 2rem;border-top:1px solid var(--bg3);font-size:.85rem;color:var(--tx2)}
-@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.filters{flex-direction:column;align-items:stretch}}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.filters{flex-direction:column;align-items:stretch}.heatmap{font-size:.5rem}}
 </style>
 </head>
 <body>
@@ -160,12 +180,12 @@ td{padding:.75rem;border-bottom:1px solid rgba(51,65,85,.4)}
   <div class="seg-grid" id="segGrid"></div>
 
   <div class="grid grid-2" style="margin-top:1.5rem">
-    <div class="chart-card"><h3>Tweet Volume by Age Group</h3><canvas id="cAge"></canvas></div>
-    <div class="chart-card"><h3>Average Sentiment by Age Group</h3><canvas id="cAgeSent"></canvas></div>
+    <div class="chart-card"><h3>Tweet Volume by Age Group</h3><div id="ageBarChart"></div></div>
+    <div class="chart-card"><h3>Average Sentiment by Age Group</h3><div id="ageSentChart"></div></div>
   </div>
 
   <h2 class="section-title">When Does Twitter Light Up?</h2>
-  <div class="chart-card"><h3>Engagement Heatmap &mdash; Day &times; Hour (darker = more active)</h3><canvas id="cHeat"></canvas></div>
+  <div class="chart-card"><h3>Engagement Heatmap &mdash; Day &times; Hour (brighter = more active)</h3><div id="heatmapGrid"></div></div>
 
 </div>
 
@@ -565,77 +585,52 @@ function renderSegs(){
     <div><strong>${s.top}</strong>top topic</div></div></div>`).join('');
 }
 
-// ===== AGE CHARTS =====
-function drawAge(){
-  const{ctx,w,h}=setupCanvas('cAge',240);
-  const pad={t:25,b:35,l:20,r:20};
-  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+// ===== AGE CHARTS (pure HTML) =====
+function renderAgeBar(){
   const vals=AGES.map(a=>Math.round(1800000*a.pct));
-  const mx=Math.max(...vals)*1.2;
-  const bw=cw/AGES.length*.55;
-
-  AGES.forEach((a,i)=>{
-    const x=pad.l+i*(cw/AGES.length)+cw/AGES.length*.225;
-    const bh=ch*(vals[i]/mx);
-    const grad=ctx.createLinearGradient(0,pad.t+ch-bh,0,pad.t+ch);
-    grad.addColorStop(0,C.acc);grad.addColorStop(1,'rgba(99,102,241,.25)');
-    ctx.fillStyle=grad;ctx.beginPath();ctx.rect(x,pad.t+ch-bh,bw,bh);ctx.fill();
-    ctx.fillStyle=C.tx2;ctx.font='11px Inter';ctx.textAlign='center';
-    ctx.fillText(a.label,x+bw/2,h-pad.b+18);
-    ctx.fillStyle=C.tx;ctx.font='bold 11px Inter';
-    ctx.fillText(fmt(vals[i]),x+bw/2,pad.t+ch-bh-10);
-  });
+  const mx=Math.max(...vals);
+  document.getElementById('ageBarChart').innerHTML=`<div class="bar-chart">${
+    AGES.map((a,i)=>{
+      const pct=Math.round(vals[i]/mx*100);
+      return `<div class="bar-col"><div class="bar-val">${fmt(vals[i])}</div><div class="bar-fill" style="height:${pct}%;background:linear-gradient(to bottom,#6366f1,rgba(99,102,241,.25))"></div><div class="bar-label">${a.label}</div></div>`;
+    }).join('')}</div>`;
 }
 
-function drawAgeSent(){
-  const{ctx,w,h}=setupCanvas('cAgeSent',240);
-  const pad={t:25,b:35,l:20,r:20};
-  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
-  const mid=pad.t+ch/2;
-  const mx=Math.max(...AGES.map(a=>Math.abs(a.sent)))*2;
-  const bw=cw/AGES.length*.55;
-
-  ctx.strokeStyle='rgba(148,163,184,.2)';ctx.setLineDash([3,3]);
-  ctx.beginPath();ctx.moveTo(pad.l,mid);ctx.lineTo(w-pad.r,mid);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle=C.tx2;ctx.font='10px Inter';ctx.textAlign='left';ctx.fillText('0',pad.l,mid-6);
-
-  AGES.forEach((a,i)=>{
-    const x=pad.l+i*(cw/AGES.length)+cw/AGES.length*.225;
-    const bh=Math.abs(a.sent/mx)*(ch/2);
-    const clr=a.sent>=0?C.green:C.red;
-    const grad=ctx.createLinearGradient(0,a.sent>=0?mid-bh:mid,0,a.sent>=0?mid:mid+bh);
-    grad.addColorStop(0,clr);grad.addColorStop(1,clr.replace(')',', 0.25)').replace('rgb','rgba'));
-    ctx.fillStyle=grad;
-    if(a.sent>=0)ctx.fillRect(x,mid-bh,bw,bh);else ctx.fillRect(x,mid,bw,bh);
-    ctx.fillStyle=C.tx2;ctx.font='11px Inter';ctx.textAlign='center';
-    ctx.fillText(a.label,x+bw/2,h-pad.b+18);
-    ctx.fillStyle=clr;ctx.font='bold 11px Inter';
-    const lbl=(a.sent>0?'+':'')+a.sent.toFixed(2);
-    ctx.fillText(lbl,x+bw/2,a.sent>=0?mid-bh-10:mid+bh+16);
-  });
+function renderAgeSent(){
+  const mx=Math.max(...AGES.map(a=>Math.abs(a.sent)));
+  document.getElementById('ageSentChart').innerHTML=`<div class="sent-bar-chart">${
+    AGES.map(a=>{
+      const pct=Math.round(Math.abs(a.sent)/mx*80);
+      const clr=a.sent>=0?'#22c55e':'#ef4444';
+      const lbl=(a.sent>0?'+':'')+a.sent.toFixed(2);
+      if(a.sent>=0){
+        return `<div class="sent-col"><div class="sent-bar-wrapper"><div class="sent-val" style="color:${clr}">${lbl}</div><div class="sent-fill" style="height:${pct}px;background:linear-gradient(to bottom,${clr},rgba(34,197,94,.2))"></div><div style="flex:1"></div></div><div class="bar-label">${a.label}</div></div>`;
+      } else {
+        return `<div class="sent-col"><div class="sent-bar-wrapper"><div style="flex:1"></div><div class="sent-fill" style="height:${pct}px;background:linear-gradient(to top,${clr},rgba(239,68,68,.2))"></div><div class="sent-val" style="color:${clr}">${lbl}</div></div><div class="bar-label">${a.label}</div></div>`;
+      }
+    }).join('')}</div>`;
 }
 
-// ===== HEATMAP =====
-function drawHeat(){
-  const{ctx,w,h}=setupCanvas('cHeat',210);
+// ===== HEATMAP (pure HTML/CSS grid) =====
+function renderHeatmap(){
   const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const pad={t:28,b:8,l:42,r:15};
-  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
-  const cellW=cw/24,cellH=ch/7;
   const mxV=Math.max(...DATA.heatmap.map(h=>h.value));
-
-  DATA.heatmap.forEach(h=>{
-    const x=pad.l+h.hour*cellW,y=pad.t+h.di*cellH;
-    const t=h.value/mxV;
-    ctx.fillStyle=`rgba(99,102,241,${(.06+t*.75).toFixed(2)})`;
-    const r=Math.min(cellW,cellH)/2-1.5;
-    ctx.beginPath();ctx.arc(x+cellW/2,y+cellH/2,r*(.4+t*.6),0,Math.PI*2);ctx.fill();
+  let html='<div class="heatmap">';
+  html+='<div></div>';
+  for(let h=0;h<24;h++){
+    html+=`<div class="hm-hour">${h%3===0?h+':00':''}</div>`;
+  }
+  days.forEach((day,di)=>{
+    html+=`<div class="hm-label">${day}</div>`;
+    for(let h=0;h<24;h++){
+      const cell=DATA.heatmap.find(c=>c.di===di&&c.hour===h);
+      const t=cell?cell.value/mxV:0;
+      const opacity=(.08+t*.82).toFixed(2);
+      html+=`<div class="hm-cell" style="background:rgba(99,102,241,${opacity})" title="${day} ${h}:00 — activity: ${cell?cell.value:0}"></div>`;
+    }
   });
-
-  days.forEach((d,i)=>{ctx.fillStyle=C.tx2;ctx.font='10px Inter';ctx.textAlign='right';
-    ctx.fillText(d,pad.l-6,pad.t+i*cellH+cellH/2+4)});
-  for(let h=0;h<24;h+=3){ctx.fillStyle=C.tx2;ctx.font='9px Inter';ctx.textAlign='center';
-    ctx.fillText(h+':00',pad.l+h*cellW+cellW/2,pad.t-10)}
+  html+='</div>';
+  document.getElementById('heatmapGrid').innerHTML=html;
 }
 
 // ===== UPDATE ALL =====
@@ -649,12 +644,12 @@ function init(){
   const f=getF();
   renderKPIs(f);renderInsight();drawVolume(f);drawSentYear(f);
   drawTopics();renderCloud(f);drawPolarity();renderSentBars();drawDonut(f);
-  renderTweets();renderSegs();drawAge();drawAgeSent();drawHeat();
+  renderTweets();renderSegs();renderAgeBar();renderAgeSent();renderHeatmap();
 }
 
 window.addEventListener('load',init);
 window.addEventListener('resize',()=>{
-  const f=getF();drawVolume(f);drawSentYear(f);drawTopics();drawPolarity();drawAge();drawAgeSent();drawHeat();
+  const f=getF();drawVolume(f);drawSentYear(f);drawTopics();drawPolarity();
 });
 </script>
 </body>
