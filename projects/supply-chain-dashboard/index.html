@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supply Chain Optimization Dashboard | Portfolio</title>
+  <meta name="description" content="Interactive supply chain analytics dashboard — demand forecasting, route optimization, carrier performance, and cost modeling.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-elevated: #334155;
+      --accent: #6366f1;
+      --accent-dim: #4f46e5;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --chart-1: #818cf8;
+      --chart-2: #34d399;
+      --chart-3: #fbbf24;
+      --chart-4: #f472b6;
+      --radius: 12px;
+      --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem 3rem;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      transition: opacity 0.2s;
+    }
+    .back:hover { opacity: 0.85; }
+
+    header.hero-dash {
+      margin-bottom: 1.75rem;
+    }
+    header.hero-dash h1 {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+    }
+    header.hero-dash p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 52ch;
+    }
+    header.hero-dash .badge {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.25rem 0.65rem;
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      padding: 0.35rem;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      position: sticky;
+      top: 0.5rem;
+      z-index: 50;
+      box-shadow: var(--shadow);
+    }
+    .tabs button {
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.55rem 1rem;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .tabs button:hover { color: var(--text); background: var(--bg-elevated); }
+    .tabs button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    section.panel {
+      scroll-margin-top: 5.5rem;
+      margin-bottom: 2rem;
+    }
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .panel-title span.dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* KPI grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 80px;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.06));
+      pointer-events: none;
+    }
+    .kpi-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+    .kpi-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .kpi-delta {
+      font-size: 0.75rem;
+      margin-top: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .kpi-delta.pos { color: var(--success); }
+    .kpi-delta.neg { color: var(--danger); }
+    .kpi-spark {
+      margin-top: 0.5rem;
+      height: 28px;
+      width: 100%;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+    .card-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+    }
+    canvas.demand-canvas,
+    canvas.delivery-canvas {
+      width: 100%;
+      height: 320px;
+      display: block;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      margin-top: 1rem;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .legend-item:hover { background: var(--bg-elevated); }
+    .legend-item.off { opacity: 0.35; text-decoration: line-through; }
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* Map */
+    .map-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 900px) {
+      .map-layout { grid-template-columns: 1fr 220px; align-items: start; }
+    }
+    .map-svg-wrap {
+      background: #0c1222;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .map-svg-wrap svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-height: 420px;
+    }
+    .wh-label { font-size: 8px; fill: var(--text-muted); }
+    .route-line {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .route-before { stroke: rgba(239, 68, 68, 0.55); stroke-width: 1.2; }
+    .route-after { stroke: rgba(52, 211, 153, 0.75); stroke-width: 1.8; }
+    .wh-dot { transition: r 0.2s; }
+    .cluster-dot { opacity: 0.9; }
+
+    .map-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .toggle-pair {
+      display: flex;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .toggle-pair button {
+      flex: 1;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.65rem;
+      border: none;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .toggle-pair button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+    .metric-box {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 0.85rem;
+      border: 1px solid var(--border);
+    }
+    .metric-box h4 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+    .metric-box .big {
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+    .metric-box .sub { font-size: 0.75rem; color: var(--success); margin-top: 0.25rem; }
+
+    /* Table */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    table.carriers {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    table.carriers th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    table.carriers th:hover { color: var(--text); }
+    table.carriers th.sorted::after {
+      content: ' ▲';
+      font-size: 0.6rem;
+      opacity: 0.7;
+    }
+    table.carriers th.sorted.desc::after { content: ' ▼'; }
+    table.carriers td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    table.carriers tr:last-child td { border-bottom: none; }
+    table.carriers tbody tr:hover { background: rgba(99, 102, 241, 0.06); }
+    .score-pill {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+    .score-high { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .score-mid { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+    .score-low { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+    /* Cost section */
+    .cost-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+    @media (min-width: 768px) {
+      .cost-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .slider-block label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      height: 6px;
+    }
+    .slider-value {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 1.1rem;
+      margin-top: 0.5rem;
+    }
+    .compare-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .compare-cards .mini {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 0.85rem;
+      border: 1px solid var(--border);
+    }
+    .compare-cards .mini h5 {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+    .compare-cards .mini p { font-size: 1.1rem; font-weight: 700; }
+    .compare-cards .mini small { display: block; margin-top: 0.25rem; font-size: 0.7rem; color: var(--text-muted); }
+
+    .insight-banner {
+      margin-top: 1rem;
+      padding: 0.85rem 1rem;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #c7d2fe;
+    }
+
+    footer.dash-foot {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../../index.html">&larr; Back to Portfolio</a>
+
+    <header class="hero-dash">
+      <h1>Supply Chain Optimization Dashboard</h1>
+      <p>Operational view of network demand, last-mile performance, and carrier mix — modeled after large-scale e-commerce fulfillment analytics.</p>
+      <span class="badge">Portfolio demo &middot; Synthetic operational data</span>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+      <button type="button" class="active" data-target="kpis">KPIs</button>
+      <button type="button" data-target="demand">Demand</button>
+      <button type="button" data-target="routes">Routes</button>
+      <button type="button" data-target="delivery">Delivery</button>
+      <button type="button" data-target="carriers">Carriers</button>
+      <button type="button" data-target="cost">Cost model</button>
+    </nav>
+
+    <!-- KPIs -->
+    <section id="kpis" class="panel">
+      <h2 class="panel-title"><span class="dot"></span> Executive KPIs</h2>
+      <div class="kpi-grid" id="kpiGrid"></div>
+    </section>
+
+    <!-- Demand -->
+    <section id="demand" class="panel">
+      <h2 class="panel-title"><span class="dot"></span> Demand forecasting</h2>
+      <div class="card">
+        <p class="card-sub">Twelve months of fulfilled order volume (000s units) by category as lines; dashed segments show a three-month forecast with an 80% confidence band on the category total.</p>
+        <div class="chart-wrap">
+          <canvas class="demand-canvas" id="demandCanvas" width="1100" height="320"></canvas>
+        </div>
+        <div class="legend" id="demandLegend"></div>
+      </div>
+    </section>
+
+    <!-- Map -->
+    <section id="routes" class="panel">
+      <h2 class="panel-title"><span class="dot"></span> Route optimization</h2>
+      <div class="card map-layout">
+        <div class="map-svg-wrap">
+          <svg id="usMap" viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg" aria-label="US network map">
+            <!-- Simplified contiguous US outline -->
+            <path id="usOutline" fill="#1e293b" stroke="#475569" stroke-width="1.5"
+              d="M 120 95 L 95 130 L 88 200 L 105 280 L 130 340 L 180 380 L 250 400 L 320 410 L 400 420 L 480 430 L 560 435 L 640 430 L 720 415 L 800 390 L 870 350 L 910 300 L 925 240 L 918 180 L 890 130 L 840 95 L 780 75 L 700 65 L 620 60 L 520 58 L 420 62 L 320 72 L 220 82 Z"/>
+            <g id="routesLayer"></g>
+            <g id="nodesLayer"></g>
+          </svg>
+        </div>
+        <div class="map-controls">
+          <div class="toggle-pair" role="group" aria-label="Optimization scenario">
+            <button type="button" id="btnBefore" class="active">Before optimization</button>
+            <button type="button" id="btnAfter">After optimization</button>
+          </div>
+          <div class="metric-box">
+            <h4>Network route distance (index)</h4>
+            <div class="big" id="routeDist">142</div>
+            <div class="sub" id="routeSave">Baseline network</div>
+          </div>
+          <div class="metric-box">
+            <h4>Est. linehaul + middle-mile cost</h4>
+            <div class="big" id="routeCost">$4.82M</div>
+            <div class="sub" id="routeCostDelta">per month modeled</div>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);line-height:1.45;">Dots: fulfillment centers. Diamonds: high-density customer clusters. Animated paths illustrate primary lane volume.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Delivery stacked -->
+    <section id="delivery" class="panel">
+      <h2 class="panel-title"><span class="dot"></span> Delivery performance</h2>
+      <div class="card">
+        <p class="card-sub">Weekly order volume: on-time (promise met) vs late — 16 weeks. Trend reflects reliability program rollout.</p>
+        <div class="chart-wrap">
+          <canvas class="delivery-canvas" id="deliveryCanvas" width="1100" height="300"></canvas>
+        </div>
+        <div class="legend">
+          <span class="legend-item" style="cursor:default"><span class="legend-swatch" style="background:#22c55e"></span> On-time</span>
+          <span class="legend-item" style="cursor:default"><span class="legend-swatch" style="background:#ef4444"></span> Late</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Carriers -->
+    <section id="carriers" class="panel">
+      <h2 class="panel-title"><span class="dot"></span> Carrier performance</h2>
+      <div class="table-wrap">
+        <table class="carriers" id="carrierTable">
+          <thead>
+            <tr>
+              <th data-key="name" data-type="string">Carrier</th>
+              <th data-key="onTime" data-type="number">On-time %</th>
+              <th data-key="transit" data-type="number">Avg transit (d)</th>
+              <th data-key="cost" data-type="number">Cost / order</th>
+              <th data-key="volume" data-type="number">Volume (k)</th>
+              <th data-key="score" data-type="number">Reliability</th>
+            </tr>
+          </thead>
+          <tbody id="carrierBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Cost -->
+    <section id="cost" class="panel">
+      <h2 class="panel-title"><span class="dot"></span> Cost optimization</h2>
+      <div class="card cost-grid">
+        <div>
+          <p class="card-sub">Shift volume from lower-tier carriers toward the top two (by reliability score). Savings assume blended rate cards and fewer exception touches.</p>
+          <div class="slider-block">
+            <label for="shiftSlider">Volume shifted to top carriers</label>
+            <input type="range" id="shiftSlider" min="0" max="40" value="12" step="1">
+            <div class="slider-value" id="shiftPct">12%</div>
+          </div>
+          <div class="compare-cards">
+            <div class="mini">
+              <h5>Blended cost / order</h5>
+              <p id="costBefore">$12.40</p>
+              <small>Current mix</small>
+            </div>
+            <div class="mini">
+              <h5>Projected cost / order</h5>
+              <p id="costAfter">$11.89</p>
+              <small id="costSaveNote">−$0.51 at 12% shift</small>
+            </div>
+            <div class="mini">
+              <h5>Network on-time %</h5>
+              <p id="relBefore">94.2%</p>
+              <small>Weighted baseline</small>
+            </div>
+            <div class="mini">
+              <h5>Projected on-time %</h5>
+              <p id="relAfter">94.9%</p>
+              <small id="relDeltaNote">+0.7 pts</small>
+            </div>
+          </div>
+          <div class="insight-banner" id="costInsight"></div>
+        </div>
+        <div class="card" style="background:var(--bg);border-style:dashed;">
+          <h3 style="font-size:0.9rem;margin-bottom:0.75rem;color:var(--text-muted);">How this model works</h3>
+          <ul style="font-size:0.8rem;color:var(--text-muted);padding-left:1.1rem;line-height:1.65;">
+            <li>Top carriers: higher reliability, slightly premium base rate.</li>
+            <li>Shifting volume reduces exception handling and re-ship rates.</li>
+            <li>Slider applies a smooth marginal curve (diminishing returns past ~25%).</li>
+            <li>Figures are illustrative for this demo; real programs use solver outputs.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer class="dash-foot">
+      Built as a single-file portfolio piece &middot; Canvas + SVG &middot; No chart libraries
+    </footer>
+  </div>
+
+  <script>
+(function () {
+  'use strict';
+
+  /* ---------- Tabs + scroll ---------- */
+  document.querySelectorAll('.tabs button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var id = btn.getAttribute('data-target');
+      var el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  window.addEventListener('scroll', function () {
+    var sections = ['kpis', 'demand', 'routes', 'delivery', 'carriers', 'cost'];
+    var y = window.scrollY + 120;
+    var current = 'kpis';
+    sections.forEach(function (id) {
+      var s = document.getElementById(id);
+      if (s && s.offsetTop <= y) current = id;
+    });
+    document.querySelectorAll('.tabs button').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-target') === current);
+    });
+  });
+
+  /* ---------- KPIs ---------- */
+  var kpis = [
+    { label: 'Total orders', value: '24,500', delta: '+3.1%', pos: true, sub: 'vs prior period', spark: [0.72, 0.68, 0.75, 0.82, 0.79, 0.88, 0.91, 0.89, 0.94, 1] },
+    { label: 'On-time delivery', value: '94.2%', delta: '+2.3%', pos: true, sub: 'promise date met', spark: [0.55, 0.58, 0.62, 0.65, 0.7, 0.74, 0.78, 0.82, 0.88, 0.92, 0.94] },
+    { label: 'Avg delivery time', value: '3.8 days', delta: '−1.8d', pos: true, sub: 'vs prior cohort', spark: [1, 0.95, 0.92, 0.88, 0.85, 0.82, 0.78, 0.72, 0.68, 0.65] },
+    { label: 'Cost per order', value: '$12.40', delta: '−4.2%', pos: true, sub: 'fulfillment + linehaul', spark: [1, 0.98, 0.96, 0.94, 0.93, 0.91, 0.9, 0.89, 0.87, 0.86] },
+    { label: 'Revenue impact', value: '$105M', delta: '+12% YoY', pos: true, sub: 'reactivation & fill', spark: [0.2, 0.35, 0.45, 0.52, 0.6, 0.68, 0.75, 0.82, 0.9, 1] }
+  ];
+
+  function drawSpark(canvas, series) {
+    var ctx = canvas.getContext('2d');
+    var w = canvas.width = canvas.offsetWidth * 2;
+    var h = canvas.height = 56;
+    ctx.scale(1, 1);
+    ctx.clearRect(0, 0, w, h);
+    var pad = 4;
+    var min = Math.min.apply(null, series);
+    var max = Math.max.apply(null, series);
+    var range = max - min || 1;
+    ctx.beginPath();
+    series.forEach(function (v, i) {
+      var x = pad + (i / (series.length - 1)) * (w - pad * 2);
+      var y = h - pad - ((v - min) / range) * (h - pad * 2);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    var grad = ctx.createLinearGradient(0, 0, w, 0);
+    grad.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+    grad.addColorStop(1, '#6366f1');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    var last = series[series.length - 1];
+    var lx = w - pad;
+    var ly = h - pad - ((last - min) / range) * (h - pad * 2);
+    ctx.fillStyle = '#6366f1';
+    ctx.beginPath();
+    ctx.arc(lx, ly, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  var kpiGrid = document.getElementById('kpiGrid');
+  kpis.forEach(function (k, idx) {
+    var card = document.createElement('div');
+    card.className = 'kpi-card';
+    var sparkId = 'sp' + idx;
+    card.innerHTML =
+      '<div class="kpi-label">' + k.label + '</div>' +
+      '<div class="kpi-value">' + k.value + '</div>' +
+      '<div class="kpi-delta ' + (k.pos ? 'pos' : 'neg') + '">' +
+      '<span>' + (k.pos ? '▲' : '▼') + ' ' + k.delta + '</span>' +
+      '<span style="color:var(--text-muted);font-weight:400">' + k.sub + '</span></div>' +
+      '<canvas class="kpi-spark" id="' + sparkId + '"></canvas>';
+    kpiGrid.appendChild(card);
+    var c = document.getElementById(sparkId);
+    drawSpark(c, k.spark);
+  });
+  window.addEventListener('resize', function () {
+    kpis.forEach(function (k, idx) {
+      var c = document.getElementById('sp' + idx);
+      if (c) drawSpark(c, k.spark);
+    });
+    drawDemand();
+    drawDelivery();
+  });
+
+  /* ---------- Demand chart ---------- */
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan+1', 'Feb+1', 'Mar+1'];
+  var categories = [
+    { key: 'furniture', name: 'Furniture', color: '#818cf8', data: [420, 390, 445, 480, 510, 498, 525, 548, 520, 585, 640, 682, 665, 620, 580] },
+    { key: 'decor', name: 'Decor', color: '#34d399', data: [310, 295, 320, 340, 355, 348, 362, 378, 365, 395, 420, 445, 430, 405, 388] },
+    { key: 'home', name: 'Home improvement', color: '#fbbf24', data: [280, 265, 290, 305, 318, 312, 328, 340, 332, 358, 385, 402, 395, 378, 360] },
+    { key: 'seasonal', name: 'Seasonal', color: '#f472b6', data: [180, 165, 175, 190, 205, 198, 215, 228, 210, 245, 290, 320, 285, 250, 220] }
+  ];
+  var visible = { furniture: true, decor: true, home: true, seasonal: true };
+
+  var legendEl = document.getElementById('demandLegend');
+  categories.forEach(function (cat) {
+    var item = document.createElement('span');
+    item.className = 'legend-item';
+    item.dataset.key = cat.key;
+    item.innerHTML = '<span class="legend-swatch" style="background:' + cat.color + '"></span>' + cat.name;
+    item.addEventListener('click', function () {
+      visible[cat.key] = !visible[cat.key];
+      item.classList.toggle('off', !visible[cat.key]);
+      drawDemand();
+    });
+    legendEl.appendChild(item);
+  });
+
+  function visibleTotalForecast() {
+    var low = [];
+    var mid = [];
+    var high = [];
+    for (var i = 0; i < 3; i++) {
+      var idx = 12 + i;
+      var t = 0;
+      categories.forEach(function (cat) {
+        if (visible[cat.key]) t += cat.data[idx];
+      });
+      mid.push(t);
+      low.push(t * 0.92);
+      high.push(t * 1.08);
+    }
+    return { low: low, mid: mid, high: high };
+  }
+
+  function drawDemand() {
+    var canvas = document.getElementById('demandCanvas');
+    var ctx = canvas.getContext('2d');
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var rect = canvas.getBoundingClientRect();
+    var w = rect.width;
+    var h = 320;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var padL = 48;
+    var padR = 24;
+    var padT = 20;
+    var padB = 40;
+    var chartW = w - padL - padR;
+    var chartH = h - padT - padB;
+
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, w, h);
+
+    var allVals = [];
+    categories.forEach(function (cat) {
+      if (!visible[cat.key]) return;
+      cat.data.forEach(function (v) { allVals.push(v); });
+    });
+    if (allVals.length === 0) allVals = [100];
+    var yMax = Math.ceil(Math.max.apply(null, allVals) * 1.15 / 50) * 50;
+    var yMin = 0;
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    for (var g = 0; g <= 5; g++) {
+      var gy = padT + (g / 5) * chartH;
+      ctx.beginPath();
+      ctx.moveTo(padL, gy);
+      ctx.lineTo(padL + chartW, gy);
+      ctx.stroke();
+      var val = yMax - (g / 5) * (yMax - yMin);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText((val / 1000).toFixed(2) + 'k', padL - 8, gy + 4);
+    }
+
+    function xAt(i) {
+      return padL + (i / (months.length - 1)) * chartW;
+    }
+    function yAt(v) {
+      return padT + chartH - ((v - yMin) / (yMax - yMin)) * chartH;
+    }
+
+    months.forEach(function (m, i) {
+      if (i % 2 === 0) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(m, xAt(i), h - 12);
+      }
+    });
+
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = '#475569';
+    ctx.beginPath();
+    ctx.moveTo(xAt(11.5), padT);
+    ctx.lineTo(xAt(11.5), padT + chartH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '600 10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Forecast →', xAt(13), padT + 14);
+
+    var histTotal11 = 0;
+    categories.forEach(function (cat) {
+      if (visible[cat.key]) histTotal11 += cat.data[11];
+    });
+    var tf = visibleTotalForecast();
+    ctx.fillStyle = 'rgba(99, 102, 241, 0.18)';
+    ctx.beginPath();
+    ctx.moveTo(xAt(11), yAt(histTotal11));
+    for (var bi = 0; bi < 3; bi++) {
+      ctx.lineTo(xAt(12 + bi), yAt(tf.high[bi]));
+    }
+    for (var bj = 2; bj >= 0; bj--) {
+      ctx.lineTo(xAt(12 + bj), yAt(tf.low[bj]));
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    categories.forEach(function (cat) {
+      if (!visible[cat.key]) return;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = cat.color;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      for (var hi = 0; hi < 12; hi++) {
+        var xh = xAt(hi);
+        var yh = yAt(cat.data[hi]);
+        if (hi === 0) ctx.moveTo(xh, yh);
+        else ctx.lineTo(xh, yh);
+      }
+      ctx.stroke();
+
+      ctx.setLineDash([7, 5]);
+      ctx.globalAlpha = 0.95;
+      ctx.beginPath();
+      ctx.moveTo(xAt(11), yAt(cat.data[11]));
+      for (var fi = 0; fi < 3; fi++) {
+        ctx.lineTo(xAt(12 + fi), yAt(cat.data[12 + fi]));
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    });
+
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    for (var ti = 0; ti < 12; ti++) {
+      var tot = 0;
+      categories.forEach(function (cat) {
+        if (visible[cat.key]) tot += cat.data[ti];
+      });
+      var xt = xAt(ti);
+      var yt = yAt(tot);
+      if (ti === 0) ctx.moveTo(xt, yt);
+      else ctx.lineTo(xt, yt);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = '#c7d2fe';
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(xAt(11), yAt(histTotal11));
+    for (var fk = 0; fk < 3; fk++) {
+      ctx.lineTo(xAt(12 + fk), yAt(tf.mid[fk]));
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  drawDemand();
+
+  /* ---------- US map routes ---------- */
+  var warehouses = [
+    { id: 'SEA', x: 125, y: 88, label: 'SEA' },
+    { id: 'LAX', x: 138, y: 268, label: 'LAX' },
+    { id: 'PHX', x: 205, y: 298, label: 'PHX' },
+    { id: 'DFW', x: 385, y: 332, label: 'DFW' },
+    { id: 'ORD', x: 518, y: 175, label: 'ORD' },
+    { id: 'MEM', x: 478, y: 298, label: 'MEM' },
+    { id: 'ATL', x: 592, y: 318, label: 'ATL' },
+    { id: 'EWR', x: 698, y: 168, label: 'EWR' },
+    { id: 'MIA', x: 658, y: 398, label: 'MIA' },
+    { id: 'DEN', x: 298, y: 218, label: 'DEN' }
+  ];
+
+  var clusters = [
+    { x: 168, y: 198, label: 'W' },
+    { x: 348, y: 255, label: 'C' },
+    { x: 538, y: 248, label: 'MW' },
+    { x: 642, y: 288, label: 'SE' },
+    { x: 722, y: 218, label: 'NE' }
+  ];
+
+  var routesBefore = [
+    { from: 0, to: 0, d: 'M 125 88 Q 200 150 168 198' },
+    { from: 1, to: 0, d: 'M 138 268 Q 120 200 168 198' },
+    { from: 3, to: 1, d: 'M 385 332 Q 400 280 348 255' },
+    { from: 4, to: 2, d: 'M 518 175 Q 530 220 538 248' },
+    { from: 5, to: 2, d: 'M 478 298 Q 510 270 538 248' },
+    { from: 6, to: 3, d: 'M 592 318 Q 620 300 642 288' },
+    { from: 7, to: 4, d: 'M 698 168 Q 710 200 722 218' },
+    { from: 8, to: 3, d: 'M 658 398 Q 650 340 642 288' },
+    { from: 9, to: 1, d: 'M 298 218 Q 320 260 348 255' },
+    { from: 2, to: 0, d: 'M 205 298 Q 190 240 168 198' }
+  ];
+
+  var routesAfter = [
+    { from: 0, to: 0, d: 'M 125 88 L 168 198' },
+    { from: 1, to: 0, d: 'M 138 268 L 168 198' },
+    { from: 3, to: 1, d: 'M 385 332 L 348 255' },
+    { from: 4, to: 2, d: 'M 518 175 L 538 248' },
+    { from: 5, to: 2, d: 'M 478 298 L 538 248' },
+    { from: 6, to: 3, d: 'M 592 318 L 642 288' },
+    { from: 7, to: 4, d: 'M 698 168 L 722 218' },
+    { from: 8, to: 3, d: 'M 658 398 L 642 288' },
+    { from: 9, to: 1, d: 'M 298 218 L 348 255' },
+    { from: 2, to: 0, d: 'M 205 298 L 168 198' }
+  ];
+
+  var routesLayer = document.getElementById('routesLayer');
+  var nodesLayer = document.getElementById('nodesLayer');
+
+  function buildMapRoutes(routeList, className) {
+    routeList.forEach(function (r, i) {
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', r.d);
+      path.setAttribute('class', 'route-line ' + className);
+      path.setAttribute('data-idx', String(i));
+      var len = 600;
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+      routesLayer.appendChild(path);
+      requestAnimationFrame(function () {
+        path.style.transition = 'stroke-dashoffset 1.2s ease-out';
+        path.style.strokeDashoffset = '0';
+      });
+    });
+  }
+
+  warehouses.forEach(function (w) {
+    var c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', w.x);
+    c.setAttribute('cy', w.y);
+    c.setAttribute('r', 6);
+    c.setAttribute('fill', '#6366f1');
+    c.setAttribute('stroke', '#c7d2fe');
+    c.setAttribute('stroke-width', 1.5);
+    c.setAttribute('class', 'wh-dot');
+    nodesLayer.appendChild(c);
+    var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', w.x + 10);
+    t.setAttribute('y', w.y + 3);
+    t.setAttribute('class', 'wh-label');
+    t.textContent = w.label;
+    nodesLayer.appendChild(t);
+  });
+
+  clusters.forEach(function (cl) {
+    var d = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    d.setAttribute('d', 'M ' + cl.x + ' ' + (cl.y - 7) + ' l 7 7 l -7 7 l -7 -7 Z');
+    d.setAttribute('fill', '#22c55e');
+    d.setAttribute('opacity', '0.85');
+    d.setAttribute('class', 'cluster-dot');
+    nodesLayer.appendChild(d);
+  });
+
+  var mapMode = 'before';
+  function clearRoutes() {
+    while (routesLayer.firstChild) routesLayer.removeChild(routesLayer.firstChild);
+  }
+
+  function applyMapMode(mode) {
+    mapMode = mode;
+    clearRoutes();
+    if (mode === 'before') {
+      buildMapRoutes(routesBefore, 'route-before');
+      document.getElementById('routeDist').textContent = '142';
+      document.getElementById('routeSave').textContent = 'Baseline network';
+      document.getElementById('routeSave').style.color = 'var(--text-muted)';
+      document.getElementById('routeCost').textContent = '$4.82M';
+      document.getElementById('routeCostDelta').textContent = 'per month modeled';
+      document.getElementById('routeCostDelta').style.color = 'var(--text-muted)';
+    } else {
+      buildMapRoutes(routesAfter, 'route-after');
+      document.getElementById('routeDist').textContent = '108';
+      document.getElementById('routeSave').textContent = '−24% distance index';
+      document.getElementById('routeSave').style.color = 'var(--success)';
+      document.getElementById('routeCost').textContent = '$3.95M';
+      document.getElementById('routeCostDelta').textContent = '−$870k vs baseline';
+      document.getElementById('routeCostDelta').style.color = 'var(--success)';
+    }
+  }
+
+  document.getElementById('btnBefore').addEventListener('click', function () {
+    document.getElementById('btnBefore').classList.add('active');
+    document.getElementById('btnAfter').classList.remove('active');
+    applyMapMode('before');
+  });
+  document.getElementById('btnAfter').addEventListener('click', function () {
+    document.getElementById('btnAfter').classList.add('active');
+    document.getElementById('btnBefore').classList.remove('active');
+    applyMapMode('after');
+  });
+  applyMapMode('before');
+
+  /* ---------- Delivery stacked bars ---------- */
+  var weeks = [];
+  for (var wk = 1; wk <= 16; wk++) weeks.push('W' + wk);
+  var onTimeSeries = [820, 835, 848, 862, 875, 888, 898, 905, 912, 920, 928, 935, 942, 948, 952, 958];
+  var lateSeries = [180, 165, 152, 138, 125, 112, 102, 95, 88, 80, 72, 65, 58, 52, 48, 42];
+
+  function drawDelivery() {
+    var canvas = document.getElementById('deliveryCanvas');
+    var ctx = canvas.getContext('2d');
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var rect = canvas.getBoundingClientRect();
+    var w = rect.width;
+    var h = 300;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, w, h);
+    var padL = 42;
+    var padB = 28;
+    var chartW = w - padL - 16;
+    var chartH = h - padB - 24;
+    var barW = chartW / weeks.length * 0.65;
+    var gap = chartW / weeks.length;
+
+    var maxV = 1000;
+    for (var wi = 0; wi < weeks.length; wi++) {
+      var x = padL + wi * gap + (gap - barW) / 2;
+      var onH = (onTimeSeries[wi] / maxV) * chartH;
+      var lateH = (lateSeries[wi] / maxV) * chartH;
+      var baseY = 20 + chartH;
+      var gradOn = ctx.createLinearGradient(0, baseY - onH - lateH, 0, baseY - lateH);
+      gradOn.addColorStop(0, '#4ade80');
+      gradOn.addColorStop(1, '#22c55e');
+      ctx.fillStyle = gradOn;
+      ctx.fillRect(x, baseY - onH - lateH, barW, onH);
+      ctx.fillStyle = '#b91c1c';
+      ctx.fillRect(x, baseY - lateH, barW, lateH);
+      if (wi % 2 === 0) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '9px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(weeks[wi], x + barW / 2, h - 8);
+      }
+    }
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('100%', padL - 6, 24);
+    ctx.fillText('0', padL - 6, 20 + chartH + 4);
+
+    ctx.strokeStyle = 'rgba(99, 102, 241, 0.6)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    for (var ti = 0; ti < weeks.length; ti++) {
+      var pct = onTimeSeries[ti] / (onTimeSeries[ti] + lateSeries[ti]);
+      var tx = padL + ti * gap + gap / 2;
+      var ty = 20 + chartH - pct * chartH;
+      if (ti === 0) ctx.moveTo(tx, ty);
+      else ctx.lineTo(tx, ty);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#a5b4fc';
+    ctx.font = '600 10px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('On-time % trend', padL + 8, 32);
+  }
+  drawDelivery();
+
+  /* ---------- Carriers table ---------- */
+  var carriers = [
+    { name: 'National Freight Co.', onTime: 96.2, transit: 2.8, cost: 11.2, volume: 4200, score: 9.2 },
+    { name: 'Continental Express', onTime: 94.8, transit: 3.1, cost: 10.85, volume: 5100, score: 8.9 },
+    { name: 'Midwest LTL Partners', onTime: 93.5, transit: 3.4, cost: 10.2, volume: 3800, score: 8.4 },
+    { name: 'Pacific Parcel Group', onTime: 92.1, transit: 3.9, cost: 9.45, volume: 2900, score: 7.6 },
+    { name: 'Eastern Rapid', onTime: 91.0, transit: 4.1, cost: 9.1, volume: 2650, score: 7.2 },
+    { name: 'Sunbelt Carriers', onTime: 89.4, transit: 4.5, cost: 8.65, volume: 2200, score: 6.5 },
+    { name: 'ValueShip Logistics', onTime: 87.2, transit: 5.0, cost: 7.95, volume: 1850, score: 5.8 },
+    { name: 'Budget Haul Inc.', onTime: 84.5, transit: 5.6, cost: 7.4, volume: 1420, score: 4.9 },
+    { name: 'CornerRoute LLC', onTime: 82.0, transit: 6.2, cost: 6.95, volume: 980, score: 4.2 }
+  ];
+
+  var sortState = { key: 'volume', dir: 'desc' };
+
+  function scoreClass(s) {
+    if (s >= 8) return 'score-high';
+    if (s >= 6) return 'score-mid';
+    return 'score-low';
+  }
+
+  function renderCarriers() {
+    var body = document.getElementById('carrierBody');
+    body.innerHTML = '';
+    var sorted = carriers.slice().sort(function (a, b) {
+      var av = a[sortState.key];
+      var bv = b[sortState.key];
+      if (typeof av === 'string') {
+        return sortState.dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      }
+      return sortState.dir === 'asc' ? av - bv : bv - av;
+    });
+    sorted.forEach(function (c) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td><strong>' + c.name + '</strong></td>' +
+        '<td>' + c.onTime.toFixed(1) + '%</td>' +
+        '<td>' + c.transit.toFixed(1) + '</td>' +
+        '<td>$' + c.cost.toFixed(2) + '</td>' +
+        '<td>' + (c.volume / 1000).toFixed(1) + 'k</td>' +
+        '<td><span class="score-pill ' + scoreClass(c.score) + '">' + c.score.toFixed(1) + '</span></td>';
+      body.appendChild(tr);
+    });
+    document.querySelectorAll('#carrierTable th').forEach(function (th) {
+      th.classList.remove('sorted', 'desc');
+      if (th.dataset.key === sortState.key) {
+        th.classList.add('sorted');
+        if (sortState.dir === 'desc') th.classList.add('desc');
+      }
+    });
+  }
+
+  document.querySelectorAll('#carrierTable th').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var key = th.dataset.key;
+      if (sortState.key === key) {
+        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState.key = key;
+        sortState.dir = key === 'name' ? 'asc' : 'desc';
+      }
+      renderCarriers();
+    });
+  });
+  renderCarriers();
+
+  /* ---------- Cost slider ---------- */
+  var baseCost = 12.4;
+  var baseRel = 94.2;
+  var weeklyOrders = 24500;
+  var annualOrders = weeklyOrders * 52;
+
+  function updateCostModel(pct) {
+    document.getElementById('shiftPct').textContent = pct + '%';
+    var t = pct / 100;
+    var costDelta = baseCost * (0.042 * Math.pow(t, 0.85) + 0.012 * t);
+    var newCost = Math.max(10.5, baseCost - costDelta);
+    var relGain = 0.35 * t * (1 - 0.4 * t);
+    var newRel = Math.min(97.5, baseRel + relGain);
+    document.getElementById('costBefore').textContent = '$' + baseCost.toFixed(2);
+    document.getElementById('costAfter').textContent = '$' + newCost.toFixed(2);
+    var savePer = baseCost - newCost;
+    document.getElementById('costSaveNote').textContent =
+      (savePer >= 0 ? '−' : '+') + '$' + Math.abs(savePer).toFixed(2) + ' at ' + pct + '% shift';
+    document.getElementById('relBefore').textContent = baseRel.toFixed(1) + '%';
+    document.getElementById('relAfter').textContent = newRel.toFixed(1) + '%';
+    var rd = newRel - baseRel;
+    document.getElementById('relDeltaNote').textContent = (rd >= 0 ? '+' : '') + rd.toFixed(1) + ' pts';
+
+    var monthlySave = (savePer * (annualOrders / 12)) / 1000000;
+    document.getElementById('costInsight').innerHTML =
+      'At <strong>' + pct + '%</strong> reallocation, modeled monthly savings at a <strong>24,500</strong> weekly order run rate (~' +
+      (annualOrders / 1000000).toFixed(2) + 'M orders/yr) scale to roughly <strong>$' +
+      monthlySave.toFixed(2) + 'M</strong> in direct transportation spend, with <strong>' +
+      (rd >= 0 ? '+' : '') + rd.toFixed(1) + '</strong> pts projected network on-time improvement.';
+  }
+
+  document.getElementById('shiftSlider').addEventListener('input', function () {
+    updateCostModel(parseInt(this.value, 10));
+  });
+  updateCostModel(12);
+})();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recommendation Engine Demo | Portfolio</title>
+  <meta name="description" content="Interactive client-side demo: content-based, collaborative, and hybrid movie recommendations with cold-start exploration.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-elevated: #334155;
+      --accent: #6366f1;
+      --accent-soft: rgba(99, 102, 241, 0.15);
+      --accent-glow: rgba(99, 102, 241, 0.45);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.12);
+      --star-empty: #475569;
+      --star-fill: #fbbf24;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: opacity var(--transition); }
+    a:hover { opacity: 0.85; }
+
+    .noise {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.25rem 4rem;
+    }
+
+    /* Nav */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+      gap: 1rem;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .back-link:hover { color: var(--accent); }
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      padding: 3rem 0 3.5rem;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 2.5rem;
+      background: linear-gradient(135deg, #1e1b4b 0%, var(--bg-card) 45%, #0f172a 100%);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 60%;
+      height: 200%;
+      background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .hero__inner {
+      position: relative;
+      padding: 0 2rem;
+      max-width: 720px;
+    }
+    .hero h1 {
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin: 0 0 1rem;
+      background: linear-gradient(90deg, #fff, #c7d2fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin: 0;
+      max-width: 58ch;
+    }
+
+    /* Sections */
+    section {
+      margin-bottom: 3rem;
+    }
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .section-head h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .section-head p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Rating pool */
+    .rating-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .rating-hint strong { color: var(--accent); }
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .movie-rate-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+      animation: fadeUp 0.5s ease backwards;
+    }
+    .movie-rate-card:nth-child(1) { animation-delay: 0.02s; }
+    .movie-rate-card:nth-child(2) { animation-delay: 0.04s; }
+    .movie-rate-card:nth-child(3) { animation-delay: 0.06s; }
+    .movie-rate-card:nth-child(4) { animation-delay: 0.08s; }
+    .movie-rate-card:nth-child(5) { animation-delay: 0.1s; }
+    .movie-rate-card:nth-child(n+6) { animation-delay: 0.12s; }
+    .movie-rate-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(99, 102, 241, 0.35);
+      box-shadow: 0 20px 40px -20px rgba(99, 102, 241, 0.25);
+    }
+    .movie-rate-card__top {
+      display: flex;
+      gap: 0.85rem;
+      margin-bottom: 0.75rem;
+    }
+    .poster {
+      width: 52px;
+      height: 78px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      background: linear-gradient(145deg, var(--accent), #4f46e5);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.35);
+    }
+    .movie-rate-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem;
+      line-height: 1.3;
+    }
+    .meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.35rem;
+    }
+    .genre-tag {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+    }
+    .stars {
+      display: flex;
+      gap: 0.15rem;
+      align-items: center;
+    }
+    .star-btn {
+      background: none;
+      border: none;
+      padding: 0.2rem;
+      cursor: pointer;
+      color: var(--star-empty);
+      transition: color 0.15s ease, transform 0.15s ease;
+      line-height: 0;
+    }
+    .star-btn:hover { transform: scale(1.15); }
+    .star-btn.active { color: var(--star-fill); }
+    .star-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .star-btn svg { width: 22px; height: 22px; display: block; }
+
+    /* Recommendations */
+    .rec-columns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    @media (max-width: 1024px) {
+      .rec-columns { grid-template-columns: 1fr; }
+    }
+    .rec-column {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      min-height: 280px;
+      transition: border-color var(--transition);
+    }
+    .rec-column:hover { border-color: rgba(99, 102, 241, 0.25); }
+    .rec-column h3 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      margin: 0 0 0.5rem;
+    }
+    .rec-column .algo-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin: 0 0 1rem;
+      line-height: 1.45;
+    }
+    .rec-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .rec-card {
+      display: flex;
+      gap: 0.65rem;
+      padding: 0.65rem;
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: border-color var(--transition), transform var(--transition);
+      animation: fadeUp 0.4s ease backwards;
+    }
+    .rec-card:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateX(4px);
+    }
+    .rec-card .poster { width: 36px; height: 54px; }
+    .rec-card h4 {
+      font-size: 0.82rem;
+      margin: 0 0 0.2rem;
+      font-weight: 600;
+    }
+    .score-pill {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--success);
+      background: rgba(52, 211, 153, 0.12);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .placeholder-msg {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      padding: 1rem 0;
+      line-height: 1.5;
+    }
+
+    /* Cold start */
+    .cold-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 768px) { .cold-grid { grid-template-columns: 1fr; } }
+    .cold-panel {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    .cold-panel h3 {
+      margin: 0 0 0.75rem;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .cold-panel.cold--bad { border-color: rgba(251, 191, 36, 0.25); }
+    .cold-panel.cold--good { border-color: rgba(52, 211, 153, 0.25); }
+    .cold-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 0.85rem;
+    }
+    .cold--bad .cold-icon { background: rgba(251, 191, 36, 0.15); }
+    .cold--good .cold-icon { background: rgba(52, 211, 153, 0.15); }
+
+    /* Explainer */
+    .explainer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    @media (max-width: 900px) { .explainer-grid { grid-template-columns: 1fr; } }
+    .explain-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+    .explain-card h3 {
+      margin: 0 0 1rem;
+      font-size: 1rem;
+    }
+    .explain-card svg.diagram {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.5);
+    }
+    .explain-card p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .formula {
+      font-family: ui-monospace, monospace;
+      font-size: 0.75rem;
+      background: var(--bg);
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      margin-top: 0.75rem;
+      color: #c7d2fe;
+      overflow-x: auto;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    footer strong { color: var(--text); }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stat-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .stat-bar .count {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="wrap">
+    <nav class="top-nav">
+      <a class="back-link" href="../../index.html">&larr; Back to Portfolio</a>
+      <span class="badge">Client-side ML demo</span>
+    </nav>
+
+    <header class="hero">
+      <div class="hero__inner">
+        <h1>Netflix-Style Recommendation Engine</h1>
+        <p>
+          Rate a handful of films and watch three classic approaches&mdash;content-based, collaborative, and hybrid&mdash;compete in your browser.
+          No server, no API keys: vectors, cosine similarity, and neighbor-based scoring, explained as you go.
+        </p>
+      </div>
+    </header>
+
+    <section id="rate">
+      <div class="section-head">
+        <h2>Rate movies</h2>
+        <p class="stat-bar">You&rsquo;ve rated <span class="count" id="rated-count">0</span> / aim for 5&ndash;10</p>
+      </div>
+      <p class="rating-hint">
+        Pick at least <strong>5 titles</strong> to see personalized recommendations. Each algorithm uses your stars differently&mdash;details below in <em>How it works</em>.
+      </p>
+      <div class="movie-grid" id="rating-pool"></div>
+    </section>
+
+    <section id="recommendations">
+      <div class="section-head">
+        <h2>Your recommendations</h2>
+        <p>Top picks per algorithm (movies you haven&rsquo;t rated)</p>
+      </div>
+      <div class="rec-columns">
+        <div class="rec-column" id="col-content">
+          <h3>Content-based</h3>
+          <p class="algo-desc">Genre vectors + cosine similarity to your taste profile.</p>
+          <div class="rec-list" id="list-content"></div>
+        </div>
+        <div class="rec-column" id="col-collab">
+          <h3>Collaborative</h3>
+          <p class="algo-desc">Match your ratings to synthetic &ldquo;neighbor&rdquo; users, borrow their favorites.</p>
+          <div class="rec-list" id="list-collab"></div>
+        </div>
+        <div class="rec-column" id="col-hybrid">
+          <h3>Hybrid</h3>
+          <p class="algo-desc">Normalized blend: 55% content + 45% collaborative signal.</p>
+          <div class="rec-list" id="list-hybrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cold-start">
+      <div class="section-head">
+        <h2>Cold start: why ratings matter</h2>
+        <p>Same engine, two worlds&mdash;no history vs. enough signal</p>
+      </div>
+      <div class="cold-grid">
+        <div class="cold-panel cold--bad">
+          <h3><span class="cold-icon">&#9888;</span> 0 ratings</h3>
+          <p class="placeholder-msg" id="cold-zero-text"></p>
+          <div class="rec-list" id="cold-zero-recs"></div>
+        </div>
+        <div class="cold-panel cold--good">
+          <h3><span class="cold-icon">&#10003;</span> 5+ ratings</h3>
+          <p class="placeholder-msg" id="cold-warm-text"></p>
+          <div class="rec-list" id="cold-warm-recs"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="section-head">
+        <h2>How it works</h2>
+        <p>Visual sketches of what each method is doing under the hood</p>
+      </div>
+      <div class="explainer-grid">
+        <article class="explain-card">
+          <h3>Content-based filtering</h3>
+          <svg class="diagram" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#6366f1"/><stop offset="100%" style="stop-color:#4f46e5"/>
+              </linearGradient>
+            </defs>
+            <rect width="320" height="160" fill="#0f172a"/>
+            <text x="16" y="28" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Genre space (multi-hot vectors)</text>
+            <rect x="20" y="45" width="50" height="90" rx="6" fill="url(#g1)" opacity="0.9"/>
+            <text x="32" y="88" fill="#fff" font-size="10" font-family="Inter,sans-serif">You</text>
+            <path d="M85 90 L115 90" stroke="#6366f1" stroke-width="2" marker-end="url(#arr)"/>
+            <rect x="120" y="50" width="40" height="30" rx="4" fill="#334155" stroke="#6366f1"/>
+            <rect x="120" y="88" width="40" height="30" rx="4" fill="#334155" stroke="#6366f1"/>
+            <rect x="120" y="126" width="40" height="30" rx="4" fill="#334155" stroke="#6366f1"/>
+            <text x="175" y="70" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Movies A,B,C&hellip;</text>
+            <text x="175" y="108" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">cos(&theta;) vs your profile</text>
+            <text x="175" y="146" fill="#34d399" font-size="10" font-family="Inter,sans-serif">Rank unseen items</text>
+            <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#6366f1"/></marker></defs>
+          </svg>
+          <p>Each movie is a vector over genres. Your profile is a weighted average of vectors from films you rated. We recommend unseen titles with the highest <strong>cosine similarity</strong> to that profile&mdash;pure item metadata, no other users required.</p>
+          <div class="formula">sim(u,i) = cos(v_user, v_i) &nbsp;&nbsp; v_user = &Sigma; r_m &middot; v_m</div>
+        </article>
+        <article class="explain-card">
+          <h3>Collaborative filtering (user-user)</h3>
+          <svg class="diagram" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="320" height="160" fill="#0f172a"/>
+            <text x="16" y="28" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Pre-built neighbor users (demo)</text>
+            <circle cx="55" cy="95" r="22" fill="#6366f1" opacity="0.85"/>
+            <text x="42" y="99" fill="#fff" font-size="9" font-family="Inter,sans-serif">You</text>
+            <circle cx="130" cy="65" r="16" fill="#334155" stroke="#818cf8"/>
+            <circle cx="155" cy="115" r="16" fill="#334155" stroke="#818cf8"/>
+            <circle cx="210" cy="90" r="16" fill="#334155" stroke="#818cf8"/>
+            <line x1="75" y1="88" x2="112" y2="72" stroke="#64748b" stroke-width="1" stroke-dasharray="4 3"/>
+            <line x1="78" y1="100" x2="138" y2="108" stroke="#6366f1" stroke-width="1.5"/>
+            <line x1="78" y1="98" x2="192" y2="92" stroke="#64748b" stroke-width="1" stroke-dasharray="4 3"/>
+            <text x="230" y="55" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Cosine on</text>
+            <text x="230" y="68" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">co-rated items</text>
+            <rect x="230" y="85" width="78" height="52" rx="6" fill="#1e293b" stroke="#34d399"/>
+            <text x="238" y="108" fill="#34d399" font-size="9" font-family="Inter,sans-serif">Aggregate</text>
+            <text x="238" y="122" fill="#34d399" font-size="9" font-family="Inter,sans-serif">neighbor scores</text>
+          </svg>
+          <p>We compare your ratings to <strong>synthetic user profiles</strong> that &ldquo;rated&rdquo; the same catalog. Neighbors with similar patterns on overlapping movies vote for what you might like next. In production this becomes matrix factorization or deep retrieval at scale.</p>
+          <div class="formula">pred(u,i) = &Sigma; w_uv &middot; r_vi / &Sigma; |w_uv|</div>
+        </article>
+        <article class="explain-card">
+          <h3>Hybrid model</h3>
+          <svg class="diagram" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="320" height="160" fill="#0f172a"/>
+            <rect x="25" y="45" width="85" height="70" rx="8" fill="#312e81" stroke="#6366f1"/>
+            <text x="42" y="78" fill="#c7d2fe" font-size="10" font-family="Inter,sans-serif">Content</text>
+            <text x="48" y="95" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">scores</text>
+            <rect x="118" y="45" width="85" height="70" rx="8" fill="#312e81" stroke="#818cf8"/>
+            <text x="128" y="78" fill="#c7d2fe" font-size="10" font-family="Inter,sans-serif">Collab</text>
+            <text x="138" y="95" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">scores</text>
+            <path d="M210 80 L245 80" stroke="#fbbf24" stroke-width="2"/>
+            <polygon points="245,80 238,76 238,84" fill="#fbbf24"/>
+            <rect x="250" y="50" width="55" height="60" rx="8" fill="#1e293b" stroke="#fbbf24"/>
+            <text x="258" y="82" fill="#fbbf24" font-size="10" font-family="Inter,sans-serif">Blend</text>
+            <text x="20" y="138" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Min-max normalize &rarr; weighted sum &rarr; final ranking</text>
+          </svg>
+          <p>Content-based systems excel when metadata is rich; collaborative signals capture taste beyond genres. A <strong>hybrid</strong> smooths blind spots: we min-max normalize both score lists, then combine with fixed weights (here 55% / 45%) and re-rank.</p>
+          <div class="formula">H(i) = 0.55 &middot; Ĉ(i) + 0.45 &middot; F̂(i)</div>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>Recommendation Engine Demo</strong> &mdash; educational portfolio piece. Algorithms run entirely in the browser; synthetic users simulate neighborhood-based collaborative filtering.</p>
+      <p style="margin-top:0.5rem;">Built with vanilla HTML/CSS/JS &middot; Inter (Google Fonts)</p>
+    </footer>
+  </div>
+
+  <script>
+(function () {
+  'use strict';
+
+  const GENRES = ['Action', 'Comedy', 'Drama', 'Sci-Fi', 'Horror', 'Romance', 'Thriller', 'Animation', 'Fantasy', 'Mystery', 'Documentary'];
+
+  const MOVIES = [
+    { id: 0, title: 'Cosmic Drift', year: 2023, genres: ['Sci-Fi', 'Thriller'], rating: 8.1, desc: 'A salvage crew crosses paths with a rogue AI in deep space.' },
+    { id: 1, title: 'Midnight Diner Stories', year: 2021, genres: ['Drama', 'Comedy'], rating: 8.4, desc: 'Late-night regulars share quiet truths over simple plates.' },
+    { id: 2, title: 'Neon Samurai', year: 2022, genres: ['Action', 'Sci-Fi'], rating: 7.6, desc: 'Blade meets circuit board in a rain-soaked megacity.' },
+    { id: 3, title: 'The Last Orchard', year: 2020, genres: ['Drama', 'Romance'], rating: 7.9, desc: 'Two siblings fight to save a family farm from foreclosure.' },
+    { id: 4, title: 'Laugh Track', year: 2019, genres: ['Comedy', 'Romance'], rating: 6.8, desc: 'A sitcom writer falls for a critic who panned her pilot.' },
+    { id: 5, title: 'Frozen Equation', year: 2024, genres: ['Thriller', 'Mystery'], rating: 8.0, desc: 'A mathematician vanishes after proving a dangerous theorem.' },
+    { id: 6, title: 'Pixel Pioneers', year: 2018, genres: ['Documentary', 'Comedy'], rating: 8.2, desc: 'The untold story of bedroom coders who shaped an industry.' },
+    { id: 7, title: 'Crown of Ash', year: 2022, genres: ['Fantasy', 'Action'], rating: 7.5, desc: 'Exiled royalty sparks rebellion in a kingdom of volcanoes.' },
+    { id: 8, title: 'Echoes in Apartment 4B', year: 2021, genres: ['Horror', 'Mystery'], rating: 7.2, desc: 'Tenants hear themselves answering knocks that never came.' },
+    { id: 9, title: 'Sprint &amp; Shout', year: 2020, genres: ['Comedy', 'Animation'], rating: 7.7, desc: 'Animated sloths enter an illegal underground relay race.' },
+    { id: 10, title: 'Blue Horizon', year: 2017, genres: ['Drama', 'Documentary'], rating: 8.6, desc: 'Oceanographers race to document reefs before they bleach.' },
+    { id: 11, title: 'Violet Hour', year: 2023, genres: ['Romance', 'Drama'], rating: 7.8, desc: 'Strangers meet every dusk for a week on the same train platform.' },
+    { id: 12, title: 'Iron Tides', year: 2019, genres: ['Action', 'Thriller'], rating: 7.4, desc: 'Submarine crew trapped between naval blockades and mutiny.' },
+    { id: 13, title: 'Starlight Archives', year: 2024, genres: ['Sci-Fi', 'Mystery'], rating: 8.3, desc: 'Librarians catalog signals that predate known civilization.' },
+    { id: 14, title: 'Ghosts of Graphite', year: 2016, genres: ['Horror', 'Thriller'], rating: 6.9, desc: 'An illustrator\'s sketches begin to predict real deaths.' },
+    { id: 15, title: 'Summer in Saffron', year: 2022, genres: ['Romance', 'Comedy'], rating: 7.1, desc: 'Chaos ensues when rival food trucks share one beach spot.' },
+    { id: 16, title: 'The Quiet Algorithm', year: 2023, genres: ['Thriller', 'Drama'], rating: 8.0, desc: 'A judge discovers sentencing software has a hidden bias loop.' },
+    { id: 17, title: 'Dragon\'s Ledger', year: 2021, genres: ['Fantasy', 'Comedy'], rating: 7.3, desc: 'A CPA is hired to audit a hoarding dragon\'s gold reserves.' },
+    { id: 18, title: 'Metro Zero', year: 2020, genres: ['Sci-Fi', 'Action'], rating: 7.6, desc: 'Time loops inside a single subway line during a blackout.' },
+    { id: 19, title: 'Paper Boats', year: 2018, genres: ['Drama', 'Animation'], rating: 8.5, desc: 'A child folds boats that carry letters across a war-torn river.' },
+    { id: 20, title: 'Red Herring Society', year: 2022, genres: ['Mystery', 'Comedy'], rating: 7.0, desc: 'Amateur sleuths compete to solve a murder that isn\'t one.' },
+    { id: 21, title: 'Velvet Scream', year: 2019, genres: ['Horror', 'Romance'], rating: 6.5, desc: 'A singer\'s voice opens doors to a parasitic dimension.' },
+    { id: 22, title: 'Orbitals', year: 2024, genres: ['Sci-Fi', 'Documentary'], rating: 8.2, desc: 'IMAX journey through humanity\'s growing shell of satellites.' },
+    { id: 23, title: 'Kings of Concrete', year: 2017, genres: ['Action', 'Drama'], rating: 7.8, desc: 'Parkour crews use rooftops to expose municipal corruption.' },
+    { id: 24, title: 'Tiny Giants', year: 2021, genres: ['Animation', 'Fantasy'], rating: 8.0, desc: 'Borrowers team with forest spirits to stop a mall expansion.' },
+    { id: 25, title: 'Nocturne Express', year: 2020, genres: ['Thriller', 'Mystery'], rating: 7.9, desc: 'Sleeper train passengers wake with swapped identities.' },
+    { id: 26, title: 'Baking Bad', year: 2023, genres: ['Comedy', 'Documentary'], rating: 7.2, desc: 'Pastry chefs attempt edible recreations of famous heists.' },
+    { id: 27, title: 'Silver Lining Wars', year: 2018, genres: ['Romance', 'Drama'], rating: 7.5, desc: 'Two diplomats fall in love while brokering a ceasefire.' },
+    { id: 28, title: 'Cipher Kids', year: 2022, genres: ['Animation', 'Mystery'], rating: 7.4, desc: 'Teens decode a 90s ARG that turns dangerously real.' },
+    { id: 29, title: 'Blood Orange', year: 2019, genres: ['Thriller', 'Horror'], rating: 7.1, desc: 'Citrus harvest unearths bodies tied to a cult\'s prophecy.' },
+    { id: 30, title: 'Aurora Run', year: 2024, genres: ['Sci-Fi', 'Romance'], rating: 7.7, desc: 'Pilots chase solar storms to deliver a heart across the Arctic.' },
+    { id: 31, title: 'The Patron Saint of Wi-Fi', year: 2021, genres: ['Comedy', 'Fantasy'], rating: 6.9, desc: 'A tech support worker gains sainthood in a glitchy simulation.' },
+    { id: 32, title: 'Glass Forest', year: 2020, genres: ['Fantasy', 'Drama'], rating: 8.1, desc: 'Villagers live in trees grown from molten silica and memory.' },
+    { id: 33, title: 'Rogue Frequency', year: 2017, genres: ['Action', 'Sci-Fi'], rating: 7.3, desc: 'Pirates hijack corporate mind-upload bandwidth on the moon.' },
+    { id: 34, title: 'Sunday Algorithms', year: 2023, genres: ['Drama', 'Comedy'], rating: 7.6, desc: 'A priest and data scientist debate free will in a small town.' },
+    { id: 35, title: 'Marigold Motel', year: 2018, genres: ['Mystery', 'Drama'], rating: 7.8, desc: 'Each room holds a year of the same missing person\'s life.' },
+    { id: 36, title: 'Howl at the Equity', year: 2022, genres: ['Documentary', 'Drama'], rating: 8.0, desc: 'Wolves reintroduced to finance bros\' wilderness retreat.' },
+    { id: 37, title: 'Bubblegum Apocalypse', year: 2019, genres: ['Animation', 'Comedy'], rating: 7.0, desc: 'Chewed gum gains sentience and demands representation.' },
+    { id: 38, title: 'Deep Cover Yarn', year: 2021, genres: ['Thriller', 'Romance'], rating: 7.5, desc: 'Undercover agent unravels while knitting a coded blanket.' },
+    { id: 39, title: 'Eclipse Architects', year: 2024, genres: ['Sci-Fi', 'Fantasy'], rating: 7.9, desc: 'Builders race to align temples before a century-long eclipse.' },
+    { id: 40, title: 'Coral Choir', year: 2020, genres: ['Documentary', 'Animation'], rating: 8.4, desc: 'Animated polyps sing about reef restoration science.' },
+    { id: 41, title: 'Black Box Bistro', year: 2022, genres: ['Mystery', 'Comedy'], rating: 7.2, desc: 'Diners order blind; chefs must infer taste from heart rate.' },
+    { id: 42, title: 'Wolves of Wall Street II', year: 2016, genres: ['Comedy', 'Action'], rating: 6.4, desc: 'Satirical sequel nobody asked for, surprisingly earnest.' },
+    { id: 43, title: 'Static Bloom', year: 2023, genres: ['Horror', 'Sci-Fi'], rating: 7.4, desc: 'TV snow cultivates flowers that feed on attention spans.' },
+    { id: 44, title: 'Grandma vs. Zombies', year: 2018, genres: ['Horror', 'Comedy'], rating: 6.8, desc: 'Retirement home residents weaponize bingo and walkers.' },
+    { id: 45, title: 'Parallel Lives of Pi', year: 2021, genres: ['Drama', 'Mystery'], rating: 7.7, desc: 'Three mathematicians believe they share one consciousness.' },
+    { id: 46, title: 'Skywrite', year: 2019, genres: ['Romance', 'Fantasy'], rating: 7.6, desc: 'Messages appear in contrails only visible to soulmates.' },
+    { id: 47, title: 'Benchwarmers Anonymous', year: 2020, genres: ['Comedy', 'Drama'], rating: 7.3, desc: 'Support group for people who peaked in the opening credits.' },
+    { id: 48, title: 'Titanium Hearts', year: 2024, genres: ['Sci-Fi', 'Thriller'], rating: 8.0, desc: 'Organ donors discover implants can be remote-deactivated.' },
+    { id: 49, title: 'Moss &amp; Majesty', year: 2017, genres: ['Fantasy', 'Documentary'], rating: 8.1, desc: 'Faux-nature doc about a kingdom ruled by lichen councils.' }
+  ];
+
+  const G = GENRES.length;
+  const N = MOVIES.length;
+
+  function genreVector(movie) {
+    const v = new Array(G).fill(0);
+    movie.genres.forEach(function (g) {
+      const i = GENRES.indexOf(g);
+      if (i >= 0) v[i] = 1;
+    });
+    const norm = Math.sqrt(v.reduce(function (s, x) { return s + x * x; }, 0));
+    if (norm > 0) return v.map(function (x) { return x / norm; });
+    return v;
+  }
+
+  const movieGenreMatrix = MOVIES.map(genreVector);
+
+  function cosineVec(a, b) {
+    let dot = 0, na = 0, nb = 0;
+    for (let i = 0; i < a.length; i++) {
+      dot += a[i] * b[i];
+      na += a[i] * a[i];
+      nb += b[i] * b[i];
+    }
+    const d = Math.sqrt(na) * Math.sqrt(nb);
+    return d > 1e-9 ? dot / d : 0;
+  }
+
+  /** Sparse ratings: movieId -> 1-5 */
+  const userRatings = Object.create(null);
+
+  function ratedMovieIds() {
+    return Object.keys(userRatings).map(Number).filter(function (id) {
+      return userRatings[id] > 0;
+    });
+  }
+
+  function userGenreProfile() {
+    const acc = new Array(G).fill(0);
+    let wsum = 0;
+    ratedMovieIds().forEach(function (mid) {
+      const r = userRatings[mid];
+      const w = r / 5;
+      const v = movieGenreMatrix[mid];
+      for (let g = 0; g < G; g++) acc[g] += w * v[g];
+      wsum += w;
+    });
+    if (wsum < 1e-9) return acc;
+    return acc.map(function (x) { return x / wsum; });
+  }
+
+  function contentScores() {
+    const profile = userGenreProfile();
+    const rated = new Set(ratedMovieIds());
+    const scores = [];
+    for (let i = 0; i < N; i++) {
+      if (rated.has(i)) continue;
+      scores.push({ id: i, score: cosineVec(profile, movieGenreMatrix[i]) });
+    }
+    scores.sort(function (a, b) { return b.score - a.score; });
+    return scores;
+  }
+
+  /**
+   * Synthetic users: each maps movie index -> rating 1-5
+   * Crafted so neighborhoods emerge (sci-fi buffs, rom-com, horror, etc.)
+   */
+  const SYNTHETIC_USERS = [
+    { ratings: { 0: 5, 2: 5, 13: 5, 18: 4, 30: 5, 33: 4, 39: 4, 48: 5 } },
+    { ratings: { 1: 5, 3: 5, 10: 5, 11: 5, 27: 5, 34: 5, 47: 4 } },
+    { ratings: { 4: 5, 9: 5, 15: 5, 26: 4, 31: 4, 37: 5, 42: 3, 44: 4 } },
+    { ratings: { 5: 5, 8: 4, 14: 5, 20: 5, 25: 5, 29: 4, 35: 5, 41: 4 } },
+    { ratings: { 6: 5, 10: 5, 22: 5, 26: 4, 36: 5, 40: 5, 49: 5 } },
+    { ratings: { 7: 5, 17: 4, 24: 5, 32: 5, 39: 5, 46: 4 } },
+    { ratings: { 12: 5, 16: 5, 23: 5, 38: 4, 48: 4 } },
+    { ratings: { 0: 4, 13: 5, 22: 5, 30: 4, 43: 4, 48: 5 } },
+    { ratings: { 3: 5, 11: 5, 15: 5, 27: 4, 38: 4, 46: 5 } },
+    { ratings: { 2: 5, 7: 5, 18: 5, 24: 4, 33: 5 } },
+    { ratings: { 8: 5, 14: 5, 21: 5, 29: 4, 43: 4, 44: 5 } },
+    { ratings: { 19: 5, 24: 5, 32: 5, 37: 4, 40: 5 } },
+    { ratings: { 1: 4, 4: 5, 15: 5, 20: 4, 41: 5, 47: 5 } },
+    { ratings: { 5: 4, 16: 5, 25: 5, 35: 4, 45: 5 } },
+    { ratings: { 9: 5, 19: 5, 37: 5, 40: 5, 42: 3 } },
+    { ratings: { 6: 4, 10: 5, 36: 5, 49: 5 } },
+    { ratings: { 17: 5, 31: 5, 32: 4, 39: 4, 46: 4 } },
+    { ratings: { 0: 5, 18: 5, 33: 5, 48: 4 } },
+    { ratings: { 28: 4, 20: 5, 41: 4, 5: 4, 45: 4 } },
+    { ratings: { 12: 4, 23: 5, 42: 4, 2: 5, 7: 4 } }
+  ];
+
+  function sparseCosineOverlap(a, b) {
+    let dot = 0, sa = 0, sb = 0;
+    const keys = new Set();
+    Object.keys(a).forEach(function (k) { keys.add(k); });
+    Object.keys(b).forEach(function (k) { keys.add(k); });
+    keys.forEach(function (k) {
+      const va = a[k];
+      const vb = b[k];
+      if (va != null && vb != null) {
+        dot += va * vb;
+        sa += va * va;
+        sb += vb * vb;
+      }
+    });
+    const d = Math.sqrt(sa) * Math.sqrt(sb);
+    return d > 1e-9 ? dot / d : 0;
+  }
+
+  function collaborativeScores() {
+    const rated = ratedMovieIds();
+    if (rated.length === 0) return [];
+    const current = {};
+    rated.forEach(function (mid) {
+      current[String(mid)] = userRatings[mid];
+    });
+
+    const neighbors = SYNTHETIC_USERS.map(function (su, idx) {
+      return { idx: idx, sim: sparseCosineOverlap(current, su.ratings) };
+    }).filter(function (n) { return n.sim > 0.01; })
+      .sort(function (a, b) { return b.sim - a.sim; })
+      .slice(0, 8);
+
+    const ratedSet = new Set(rated);
+    const agg = {};
+    let wsum = 0;
+    neighbors.forEach(function (n) {
+      const su = SYNTHETIC_USERS[n.idx];
+      wsum += Math.abs(n.sim);
+      Object.keys(su.ratings).forEach(function (k) {
+        const mid = Number(k);
+        if (ratedSet.has(mid)) return;
+        const contrib = n.sim * su.ratings[k];
+        agg[mid] = (agg[mid] || 0) + contrib;
+      });
+    });
+
+    const scores = [];
+    Object.keys(agg).forEach(function (k) {
+      const mid = Number(k);
+      scores.push({ id: mid, score: wsum > 0 ? agg[k] / wsum : 0 });
+    });
+    scores.sort(function (a, b) { return b.score - a.score; });
+    return scores;
+  }
+
+  function minMaxNormalize(items) {
+    if (items.length === 0) return [];
+    const vals = items.map(function (x) { return x.score; });
+    const lo = Math.min.apply(null, vals);
+    const hi = Math.max.apply(null, vals);
+    const span = hi - lo || 1;
+    return items.map(function (x) {
+      return { id: x.id, score: (x.score - lo) / span };
+    });
+  }
+
+  function hybridScores() {
+    const c = contentScores().slice(0, 40);
+    const f = collaborativeScores().slice(0, 40);
+    const nc = minMaxNormalize(c);
+    const nf = minMaxNormalize(f);
+    const mapC = Object.create(null);
+    const mapF = Object.create(null);
+    nc.forEach(function (x) { mapC[x.id] = x.score; });
+    nf.forEach(function (x) { mapF[x.id] = x.score; });
+    const ids = new Set();
+    nc.forEach(function (x) { ids.add(x.id); });
+    nf.forEach(function (x) { ids.add(x.id); });
+    const Wc = 0.55;
+    const Wf = 0.45;
+    const out = [];
+    ids.forEach(function (id) {
+      const sc = mapC[id] != null ? mapC[id] : 0;
+      const sf = mapF[id] != null ? mapF[id] : 0;
+      if (ratedMovieIds().indexOf(id) >= 0) return;
+      out.push({ id: id, score: Wc * sc + Wf * sf });
+    });
+    out.sort(function (a, b) { return b.score - a.score; });
+    return out;
+  }
+
+  function popularFallback(limit) {
+    const rated = new Set(ratedMovieIds());
+    return MOVIES.map(function (m, i) {
+      return { id: i, score: m.rating / 10 };
+    }).filter(function (x) { return !rated.has(x.id); })
+      .sort(function (a, b) { return b.score - a.score; })
+      .slice(0, limit);
+  }
+
+  function posterHue(id) {
+    const hues = [250, 265, 280, 200, 340, 160, 220, 190];
+    return hues[id % hues.length];
+  }
+
+  function starSVG(filled) {
+    return '<svg viewBox="0 0 24 24" fill="' + (filled ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+  }
+
+  function renderStars(movieId, current) {
+    let html = '<div class="stars" role="group" aria-label="Rate ' + MOVIES[movieId].title + '">';
+    for (let s = 1; s <= 5; s++) {
+      const active = current >= s ? ' active' : '';
+      html += '<button type="button" class="star-btn' + active + '" data-mid="' + movieId + '" data-star="' + s + '" aria-label="' + s + ' stars">' + starSVG(current >= s) + '</button>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function movieCardSmall(movieId, scoreLabel) {
+    const m = MOVIES[movieId];
+    const hue = posterHue(movieId);
+    const scoreHtml = scoreLabel != null
+      ? '<span class="score-pill">' + scoreLabel + '</span>'
+      : '';
+    return (
+      '<div class="rec-card" style="animation-delay:' + (movieId % 7) * 0.04 + 's">' +
+        '<div class="poster" style="background:linear-gradient(145deg,hsl(' + hue + ',70%,45%),hsl(' + ((hue + 40) % 360) + ',65%,35%))"></div>' +
+        '<div><h4>' + m.title + '</h4><div class="meta">' + m.year + ' &middot; ' + m.genres.join(', ') + '</div>' + scoreHtml + '</div>' +
+      '</div>'
+    );
+  }
+
+  function formatScoreContent(x) {
+    return 'sim ' + (x.score * 100).toFixed(0) + '%';
+  }
+  function formatScoreCollab(x) {
+    return 'neighbor ' + x.score.toFixed(2);
+  }
+  function formatScoreHybrid(x) {
+    return 'blend ' + (x.score * 100).toFixed(0) + '%';
+  }
+
+  const RATING_POOL_SIZE = 18;
+  /* Fixed diverse slice across the catalog for a stable portfolio demo */
+  const poolIndices = [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 43, 46, 0, 48].slice(0, RATING_POOL_SIZE);
+
+  const poolEl = document.getElementById('rating-pool');
+  const countEl = document.getElementById('rated-count');
+  const listContent = document.getElementById('list-content');
+  const listCollab = document.getElementById('list-collab');
+  const listHybrid = document.getElementById('list-hybrid');
+  const coldZeroText = document.getElementById('cold-zero-text');
+  const coldWarmText = document.getElementById('cold-warm-text');
+  const coldZeroRecs = document.getElementById('cold-zero-recs');
+  const coldWarmRecs = document.getElementById('cold-warm-recs');
+
+  function renderRatingPool() {
+    poolEl.innerHTML = poolIndices.map(function (mid) {
+      const m = MOVIES[mid];
+      const hue = posterHue(mid);
+      const r = userRatings[mid] || 0;
+      return (
+        '<div class="movie-rate-card" data-mid="' + mid + '">' +
+          '<div class="movie-rate-card__top">' +
+            '<div class="poster" style="background:linear-gradient(145deg,hsl(' + hue + ',70%,45%),hsl(' + ((hue + 40) % 360) + ',65%,35%))"></div>' +
+            '<div>' +
+              '<h3>' + m.title + '</h3>' +
+              '<div class="meta">' + m.year + ' &middot; IMDb-style ' + m.rating + '/10</div>' +
+              '<div class="genres">' + m.genres.map(function (g) {
+                return '<span class="genre-tag">' + g + '</span>';
+              }).join('') + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<p class="meta" style="margin:0 0 0.5rem;line-height:1.4">' + m.desc + '</p>' +
+          renderStars(mid, r) +
+        '</div>'
+      );
+    }).join('');
+
+    poolEl.querySelectorAll('.star-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const mid = Number(btn.getAttribute('data-mid'));
+        const star = Number(btn.getAttribute('data-star'));
+        userRatings[mid] = star;
+        updateAll();
+      });
+    });
+  }
+
+  function emptyRecsHtml(message) {
+    return '<p class="placeholder-msg">' + message + '</p>';
+  }
+
+  function updateRecommendations() {
+    const n = ratedMovieIds().length;
+    countEl.textContent = String(n);
+
+    const needWarm = n >= 5;
+
+    if (needWarm) {
+      const c = contentScores().slice(0, 5);
+      const f = collaborativeScores().slice(0, 5);
+      const h = hybridScores().slice(0, 5);
+      listContent.innerHTML = c.map(function (x) {
+        return movieCardSmall(x.id, formatScoreContent(x));
+      }).join('');
+      listCollab.innerHTML = f.length
+        ? f.map(function (x) { return movieCardSmall(x.id, formatScoreCollab(x)); }).join('')
+        : emptyRecsHtml('No strong neighbors for this taste mix in the synthetic set&mdash;try different ratings.');
+      listHybrid.innerHTML = h.map(function (x) {
+        return movieCardSmall(x.id, formatScoreHybrid(x));
+      }).join('');
+    } else {
+      const pop = popularFallback(5);
+      const popHtml = pop.map(function (x) {
+        return movieCardSmall(x.id, 'popularity');
+      }).join('');
+      listContent.innerHTML =
+        '<p class="placeholder-msg" style="margin-bottom:0.75rem">Cold start: content-based needs a genre profile. Until you rate <strong>5+</strong> films, we show <em>global popularity</em> (not personalized).</p>' +
+        popHtml;
+
+      if (n === 0) {
+        listCollab.innerHTML = emptyRecsHtml('No co-rated items &rarr; no neighbors. In production, teams use side information (trailers watched, device, surveys) to bootstrap taste.');
+      } else {
+        const f = collaborativeScores();
+        if (f.length === 0) {
+          listCollab.innerHTML = emptyRecsHtml('Sparse overlap with the demo neighbor users. Add more ratings (especially on popular genres) to activate user-user CF.');
+        } else {
+          listCollab.innerHTML =
+            '<p class="placeholder-msg" style="margin-bottom:0.75rem">Early signal: tentative neighbor scores (still noisy below 5 ratings).</p>' +
+            f.slice(0, 5).map(function (x) {
+              return movieCardSmall(x.id, formatScoreCollab(x));
+            }).join('');
+        }
+      }
+
+      const h = hybridScores();
+      if (h.length > 0) {
+        listHybrid.innerHTML =
+          '<p class="placeholder-msg" style="margin-bottom:0.75rem">Partial hybrid: collaborative leg is weak until your profile stabilizes.</p>' +
+          h.slice(0, 5).map(function (x) {
+            return movieCardSmall(x.id, formatScoreHybrid(x));
+          }).join('');
+      } else {
+        listHybrid.innerHTML = emptyRecsHtml('Hybrid blend needs meaningful content and collaborative scores. Rate more movies to see both legs contribute.');
+      }
+    }
+
+    coldZeroText.innerHTML = 'With <strong>zero ratings</strong>, the system has no vector for you. Content-based and hybrid models collapse to generic signals; collaborative filtering cannot find neighbors. Product teams mitigate this with onboarding quizzes, trending rows, or metadata rules.';
+    coldWarmText.innerHTML = 'With <strong>five or more ratings</strong>, your genre profile stabilizes and user-user similarity finds credible neighbors. Recommendations diverge from &ldquo;everyone likes this&rdquo; toward &ldquo;people like you liked this.&rdquo;';
+
+    const saved = JSON.parse(JSON.stringify(userRatings));
+    Object.keys(userRatings).forEach(function (k) { delete userRatings[k]; });
+    const zeroContent = popularFallback(3);
+    Object.assign(userRatings, saved);
+
+    coldZeroRecs.innerHTML = zeroContent.map(function (x) {
+      return movieCardSmall(x.id, 'trending');
+    }).join('');
+
+    if (needWarm) {
+      const warmList = contentScores().slice(0, 3);
+      coldWarmRecs.innerHTML = warmList.map(function (x) {
+        return movieCardSmall(x.id, formatScoreContent(x));
+      }).join('');
+    } else {
+      coldWarmRecs.innerHTML = '<p class="placeholder-msg">Rate at least 5 movies above to see how your personalized top 3 would look here.</p>';
+    }
+  }
+
+  function updateAll() {
+    renderRatingPool();
+    updateRecommendations();
+  }
+
+  renderRatingPool();
+  updateRecommendations();
+})();
+  </script>
+</body>
+</html>

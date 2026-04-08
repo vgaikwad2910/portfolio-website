@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GenAI Customer Support Analyzer | Portfolio Demo</title>
+  <meta name="description" content="Interactive demo: rule-based NLP pipeline simulating GenAI analysis of support transcripts.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-elevated: #334155;
+      --accent: #6366f1;
+      --accent-soft: rgba(99, 102, 241, 0.15);
+      --accent-glow: rgba(99, 102, 241, 0.35);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.12);
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.45);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.18), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 50%, rgba(99, 102, 241, 0.06), transparent);
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 4rem;
+    }
+
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .back-link:hover { color: var(--accent); text-decoration: none; transform: translateX(-2px); }
+
+    .hero-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+    }
+
+    h1 {
+      font-size: clamp(1.65rem, 4vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin: 0 0 0.5rem;
+      background: linear-gradient(135deg, #f1f5f9 0%, #c7d2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      max-width: 52ch;
+      margin: 0 0 2rem;
+      font-size: 1rem;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .panel__title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin: 0 0 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    select, textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.9rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select {
+      padding: 0.65rem 0.85rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+    }
+
+    select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    textarea {
+      min-height: 220px;
+      padding: 1rem;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1.25rem;
+    }
+
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .toggle {
+      position: relative;
+      width: 48px;
+      height: 26px;
+      background: var(--bg-elevated);
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+
+    .toggle.on { background: var(--accent); border-color: var(--accent); }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: var(--text);
+      border-radius: 50%;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .toggle.on::after { transform: translateX(22px); }
+
+    .btn {
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+    }
+
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    .btn--primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .btn--primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px var(--accent-glow);
+    }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn--ghost:hover:not(:disabled) {
+      color: var(--text);
+      border-color: var(--text-muted);
+    }
+
+    /* Loading overlay */
+    .loader-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1.25rem;
+      padding: 2rem;
+    }
+
+    .loader-overlay.visible { display: flex; animation: fadeIn 0.35s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .loader-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 2.5rem;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .loader-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .loader-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: var(--bg);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #a5b4fc);
+      border-radius: 999px;
+      transition: width 0.08s linear;
+    }
+
+    .loader-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.35rem;
+      margin-top: 1rem;
+    }
+
+    .loader-dots span {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: bounce 1.2s ease infinite;
+    }
+
+    .loader-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .loader-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Results grid */
+    .results-section {
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 0.45s ease, transform 0.45s ease, max-height 0.5s ease;
+    }
+
+    .results-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      max-height: none;
+      overflow: visible;
+    }
+
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      animation: cardIn 0.5s ease backwards;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #818cf8);
+      opacity: 0.85;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.2s; }
+    .card:nth-child(5) { animation-delay: 0.25s; }
+    .card:nth-child(6) { animation-delay: 0.3s; }
+    .card:nth-child(7) { animation-delay: 0.35s; }
+
+    .card__label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .card__value {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .card--wide { grid-column: 1 / -1; }
+
+    /* Sentiment gauge */
+    .gauge-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .gauge {
+      width: 120px;
+      height: 60px;
+      position: relative;
+    }
+
+    .gauge svg { width: 100%; height: 100%; overflow: visible; }
+
+    .gauge svg .gauge-needle {
+      transform-origin: 60px 60px;
+      transition: transform 0.8s cubic-bezier(0.34, 1.3, 0.64, 1);
+    }
+
+    .gauge-score {
+      font-size: 1.75rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.35rem;
+    }
+
+    .tag {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+    }
+
+    .tag-c0 { background: rgba(99, 102, 241, 0.2); color: #c7d2fe; border-color: rgba(99, 102, 241, 0.4); }
+    .tag-c1 { background: rgba(52, 211, 153, 0.15); color: #6ee7b7; border-color: rgba(52, 211, 153, 0.35); }
+    .tag-c2 { background: rgba(251, 191, 36, 0.15); color: #fcd34d; border-color: rgba(251, 191, 36, 0.35); }
+    .tag-c3 { background: rgba(248, 113, 113, 0.12); color: #fca5a5; border-color: rgba(248, 113, 113, 0.3); }
+    .tag-c4 { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border-color: rgba(56, 189, 248, 0.35); }
+
+    .summary-text {
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+
+    .pill {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+    }
+
+    .pill--low { background: rgba(52, 211, 153, 0.2); color: var(--success); }
+    .pill--med { background: rgba(251, 191, 36, 0.2); color: var(--warning); }
+    .pill--high { background: rgba(251, 146, 60, 0.2); color: #fdba74; }
+    .pill--crit { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+
+    .pill--resolved { background: rgba(52, 211, 153, 0.2); color: var(--success); }
+    .pill--unresolved { background: rgba(251, 191, 36, 0.2); color: var(--warning); }
+    .pill--escalation { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+
+    /* Batch table */
+    .batch-section { margin-top: 2rem; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    th, td {
+      padding: 0.75rem 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(99, 102, 241, 0.04); }
+
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+
+    .chart-card h3 {
+      margin: 0 0 1rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      margin-top: 0.75rem;
+    }
+
+    .donut-legend span {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .bar-chart { margin-top: 0.5rem; }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 72px 1fr 36px;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .bar-track {
+      height: 10px;
+      background: var(--bg);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .stat-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-box .num {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .stat-box .lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+
+    /* Word cloud */
+    .word-cloud {
+      min-height: 200px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem 0.75rem;
+      padding: 1.5rem 1rem;
+      background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.08), transparent 70%);
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--border);
+    }
+
+    .wc-word {
+      font-weight: 700;
+      line-height: 1;
+      opacity: 0;
+      animation: wcPop 0.5s ease forwards;
+      cursor: default;
+      transition: transform 0.2s;
+    }
+
+    .wc-word:hover { transform: scale(1.08); }
+
+    @keyframes wcPop {
+      to { opacity: 1; }
+    }
+
+    /* Line chart */
+    .line-chart-wrap {
+      width: 100%;
+      height: 220px;
+      margin-top: 0.5rem;
+    }
+
+    .line-chart-wrap svg { width: 100%; height: 100%; }
+
+    /* Pipeline */
+    .pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+      justify-content: center;
+      gap: 0;
+      margin: 1.5rem 0;
+    }
+
+    .pipe-step {
+      flex: 1 1 140px;
+      min-width: 120px;
+      max-width: 180px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem 0.85rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .pipe-step__icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 0.65rem;
+      background: var(--accent-soft);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .pipe-step__title {
+      font-weight: 700;
+      font-size: 0.82rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .pipe-step__desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .pipe-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-size: 1.25rem;
+      font-weight: 300;
+      padding: 0 0.15rem;
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 768px) {
+      .pipe-arrow { transform: rotate(90deg); padding: 0.35rem 0; width: 100%; }
+      .pipeline { flex-direction: column; align-items: center; }
+      .pipe-step { max-width: 100%; width: 100%; }
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top-bar">
+      <a class="back-link" href="../../index.html">&larr; Back to Portfolio</a>
+      <span class="hero-badge">Portfolio Demo &middot; Simulated NLP</span>
+    </div>
+
+    <h1>GenAI Customer Support Analyzer</h1>
+    <p class="subtitle">
+      Paste a support transcript and explore a production-style analysis dashboard. Under the hood, this demo uses rule-based NLP (tokenization, keywords, heuristics) to simulate what a GenAI pipeline might surface&mdash;no live API calls.
+    </p>
+
+    <section class="panel" aria-labelledby="input-heading">
+      <h2 class="panel__title" id="input-heading">Transcript input</h2>
+      <label for="sample-select">Load a sample scenario</label>
+      <select id="sample-select" aria-label="Sample transcript">
+        <option value="billing">Billing &mdash; double charge dispute</option>
+        <option value="technical">Technical &mdash; app crash on export</option>
+        <option value="feature">Feature request &mdash; recurring invoices</option>
+        <option value="account">Account access &mdash; locked out / 2FA</option>
+        <option value="product">Product help &mdash; confused about tiers</option>
+      </select>
+      <label for="transcript">Conversation transcript</label>
+      <textarea id="transcript" placeholder="Customer and agent messages..."></textarea>
+      <div class="row-actions">
+        <button type="button" class="btn btn--primary" id="btn-analyze">Analyze transcript</button>
+        <button type="button" class="btn btn--ghost" id="btn-clear">Clear</button>
+        <div class="toggle-wrap">
+          <span id="batch-label">Batch mode (all samples)</span>
+          <button type="button" class="toggle" id="batch-toggle" role="switch" aria-checked="false" aria-labelledby="batch-label"></button>
+        </div>
+      </div>
+    </section>
+
+    <div class="loader-overlay" id="loader" aria-live="polite" aria-busy="true">
+      <div class="loader-card">
+        <div class="loader-title">Running NLP pipeline</div>
+        <div class="loader-sub" id="loader-sub">Tokenizing &amp; classifying&hellip;</div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="loader-dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+
+    <section class="results-section" id="single-results" aria-live="polite">
+      <h2 class="panel__title" style="margin-bottom:1rem;">Analysis dashboard</h2>
+      <div class="grid-cards" id="cards-grid"></div>
+    </section>
+
+    <section class="batch-section results-section" id="batch-results">
+      <h2 class="panel__title" style="margin-bottom:1rem;">Batch analysis</h2>
+      <div class="stats-grid" id="batch-stats"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Category</th>
+              <th>Sentiment</th>
+              <th>Emotion</th>
+              <th>Resolution</th>
+              <th>Priority</th>
+            </tr>
+          </thead>
+          <tbody id="batch-tbody"></tbody>
+        </table>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>Category distribution</h3>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:1.5rem;">
+            <svg id="donut-svg" width="160" height="160" viewBox="0 0 160 160" aria-label="Category donut chart"></svg>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Sentiment distribution</h3>
+          <div class="bar-chart" id="sentiment-bars"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:2rem;">
+      <h2 class="panel__title">Trending topics &amp; volume</h2>
+      <p style="color:var(--text-muted);font-size:0.9rem;margin:0 0 1rem;">Word cloud from combined sample transcripts (frequency-weighted). Issue volume below uses simulated weekly aggregates for illustration.</p>
+      <div class="word-cloud" id="word-cloud" aria-label="Word cloud"></div>
+      <h3 style="font-size:0.9rem;margin:1.5rem 0 0.5rem;">Simulated issue volume (12 weeks)</h3>
+      <div class="line-chart-wrap">
+        <svg id="line-chart" viewBox="0 0 520 220" preserveAspectRatio="xMidYMid meet" aria-label="Line chart of issue volume"></svg>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel__title">How it works</h2>
+      <p style="color:var(--text-muted);font-size:0.9rem;margin:0 0 0.5rem;">
+        This demo mirrors a typical text analytics stack: lightweight preprocessing, lexical signals, and templated generation&mdash;the same stages often wrapped by an LLM in production.
+      </p>
+      <div class="pipeline" role="list">
+        <div class="pipe-step" role="listitem">
+          <div class="pipe-step__icon">&#9670;</div>
+          <div class="pipe-step__title">Tokenization</div>
+          <div class="pipe-step__desc">Lowercase, split on boundaries, drop noise tokens.</div>
+        </div>
+        <div class="pipe-arrow" aria-hidden="true">&rarr;</div>
+        <div class="pipe-step" role="listitem">
+          <div class="pipe-step__icon">&#9670;</div>
+          <div class="pipe-step__title">Keywords</div>
+          <div class="pipe-step__desc">Score topical n-grams; surface key phrases as tags.</div>
+        </div>
+        <div class="pipe-arrow" aria-hidden="true">&rarr;</div>
+        <div class="pipe-step" role="listitem">
+          <div class="pipe-step__icon">&#9670;</div>
+          <div class="pipe-step__title">Classification</div>
+          <div class="pipe-step__desc">Lexicon overlap picks Billing, Tech, Feature, Account, Help.</div>
+        </div>
+        <div class="pipe-arrow" aria-hidden="true">&rarr;</div>
+        <div class="pipe-step" role="listitem">
+          <div class="pipe-step__icon">&#9670;</div>
+          <div class="pipe-step__title">Sentiment</div>
+          <div class="pipe-step__desc">Positive vs. negative word counts &rarr; score &minus;1..+1.</div>
+        </div>
+        <div class="pipe-arrow" aria-hidden="true">&rarr;</div>
+        <div class="pipe-step" role="listitem">
+          <div class="pipe-step__icon">&#9670;</div>
+          <div class="pipe-step__title">Summarization</div>
+          <div class="pipe-step__desc">Template slots filled from category, emotion, resolution.</div>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">Built for portfolio demonstration. Analysis is deterministic and rule-based, not from a live model.</p>
+  </div>
+
+  <script>
+(function () {
+  'use strict';
+
+  const SAMPLES = {
+    billing: `Customer: Hi, I was charged twice for QuickBooks last month. My bank shows two identical $89 withdrawals on the 14th. This is really frustrating—I need a refund for the duplicate.
+
+Agent: I'm sorry for the trouble. I can see your account. Let me verify the billing history.
+
+Customer: Please hurry. I'm worried this will happen again next month.
+
+Agent: I've issued a refund for the duplicate charge; it should post in 5-7 business days. I've also added a note so billing only runs once going forward.
+
+Customer: OK, thank you. That helps.`,
+
+    technical: `Customer: Every time I try to export my P&L to Excel the app crashes. I've updated to the latest version and restarted. Nothing works. This is blocking my month-end close.
+
+Agent: Thanks for the details. Are you on Windows or Mac, and roughly how many rows are in the report?
+
+Customer: Windows 11. The report is pretty big, maybe 15k rows. I get a white screen then it just closes.
+
+Agent: We're tracking a memory issue with large exports. I'll send you a workaround using CSV split, and I've escalated to engineering with your logs.
+
+Customer: I appreciate the workaround but I need a real fix soon.`,
+
+    feature: `Customer: Love the product. One thing—can you add recurring invoices that auto-send on a schedule? Competitors have it and it would save me hours.
+
+Agent: Thanks for the suggestion! I'll log this as feedback for the product team.
+
+Customer: Is there any timeline? Half my clients are on retainer.
+
+Agent: I don't have a date yet, but votes on our ideas forum help prioritize. I can send you the link.
+
+Customer: Sure, send it. Hope it comes soon!`,
+
+    account: `Customer: I can't log in. It says my password is wrong but I know it's right. I tried reset email three times and nothing arrived. I'm completely locked out.
+
+Agent: Let's check your email on file and spam folder. Sometimes the reset lands in promotions.
+
+Customer: Checked everything. Also my phone broke so I can't use 2FA. I need access today for payroll.
+
+Agent: I've verified your identity and removed the old 2FA device. Please set up a new authenticator once you're in. Reset link sent to your backup email.
+
+Customer: Got in—finally. Stressful morning but thanks.`,
+
+    product: `Customer: I'm confused about which plan I need. Online it says "Essentials" includes payroll but my dashboard says upgrade required. Which is correct?
+
+Agent: Payroll is an add-on for Essentials in your region. The marketing page can be unclear—I'll flag that internally.
+
+Customer: So I pay extra for payroll on top of Essentials? That's not what I thought I signed up for.
+
+Agent: Correct—Essentials is bookkeeping; payroll is separate. I can walk you through pricing or a bundle that fits.
+
+Customer: OK, please explain the bundle. I just want one simple bill.`
+  };
+
+  const SAMPLE_LABELS = {
+    billing: 'Billing — double charge',
+    technical: 'Technical — export crash',
+    feature: 'Feature — recurring invoices',
+    account: 'Account — lockout / 2FA',
+    product: 'Product — plan confusion'
+  };
+
+  const STOPWORDS = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','as','by','with','from','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','could','should','may','might','must','can','this','that','these','those','i','you','he','she','it','we','they','me','him','her','us','them','my','your','his','her','its','our','their','what','which','who','whom','so','if','just','also','not','no','yes','ok','okay','please','thanks','thank','hi','hello','hey','im','ive','dont','cant','wont','isnt','arent','wasnt','werent','theres','here','there','then','than','too','very','just','really','something','anything','everything','nothing','someone','anyone','everyone','got','get','gotten','going','go','went','come','came','need','want','like','know','think','see','say','said','says','tell','told','ask','asked','let','lets','about','into','through','during','before','after','above','below','up','down','out','off','over','under','again','once','twice','today','yesterday','tomorrow','month','year','week','day','time','way','even','still','back','only','other','another','such','same','both','each','few','more','most','some','any','all','every','own','using','use','used','using','help','helped','helping','sorry','agent','customer']);
+
+  const CATEGORY_KEYS = {
+    Billing: ['charge', 'charged', 'billing', 'bill', 'refund', 'payment', 'invoice', 'subscription', 'duplicate', 'withdrawal', 'bank', 'price', 'cost', 'fee', 'paid', 'money'],
+    Technical: ['crash', 'crashes', 'crashed', 'error', 'bug', 'export', 'excel', 'memory', 'version', 'update', 'restart', 'windows', 'mac', 'logs', 'engineering', 'fix', 'broken', 'not working', 'issue', 'blocking'],
+    'Feature Request': ['feature', 'add', 'request', 'suggestion', 'wish', 'competitors', 'timeline', 'forum', 'prioritize', 'recurring', 'schedule', 'auto', 'retainer', 'idea'],
+    Account: ['login', 'log in', 'password', 'locked', 'reset', 'email', '2fa', 'authenticator', 'access', 'verify', 'identity', 'account', 'spam', 'backup'],
+    'Product Help': ['plan', 'essentials', 'upgrade', 'dashboard', 'confused', 'unclear', 'which', 'correct', 'pricing', 'bundle', 'payroll', 'include', 'includes', 'marketing', 'signed', 'product']
+  };
+
+  const POS_WORDS = ['thanks', 'thank', 'great', 'good', 'appreciate', 'helpful', 'love', 'perfect', 'fine', 'resolved', 'fixed', 'happy', 'glad', 'excellent', 'awesome', 'hope'];
+  const NEG_WORDS = ['frustrat', 'angry', 'terrible', 'awful', 'worst', 'hate', 'bad', 'wrong', 'crash', 'blocked', 'stress', 'worried', 'nothing', 'confus', 'unclear', 'not', "can't", 'cannot', 'never', 'still', 'urgent', 'blocking', 'duplicate', 'locked'];
+
+  const EMOTION_PATTERNS = {
+    Frustrated: ['frustrat', 'angry', 'stress', 'hurry', 'blocking', 'worst', 'nothing works', 'finally'],
+    Confused: ['confus', 'unclear', 'which', 'correct', 'thought', 'not what'],
+    Satisfied: ['thank', 'thanks', 'appreciate', 'helps', 'love', 'great', 'got in'],
+    Neutral: []
+  };
+
+  const RESOLVED_SIGNALS = ['refund', 'issued', 'resolved', 'fixed', 'thank', 'thanks', 'got in', 'workaround'];
+  const UNRESOLVED_SIGNALS = ['still', 'need a real fix', 'no date', 'timeline', 'blocking', 'nothing works', 'not what'];
+
+  const DONUT_COLORS = ['#6366f1', '#34d399', '#fbbf24', '#f87171', '#38bdf8', '#a78bfa', '#fb923c'];
+
+  function tokenize(text) {
+    return text.toLowerCase()
+      .replace(/['']/g, "'")
+      .split(/[^a-z0-9']+/)
+      .filter(function (t) { return t.length > 1; });
+  }
+
+  function tokensWithBigrams(tokens) {
+    const out = tokens.slice();
+    for (let i = 0; i < tokens.length - 1; i++) {
+      out.push(tokens[i] + ' ' + tokens[i + 1]);
+    }
+    return out;
+  }
+
+  function scoreCategory(text) {
+    const lower = text.toLowerCase();
+    let best = 'Product Help';
+    let bestScore = 0;
+    Object.keys(CATEGORY_KEYS).forEach(function (cat) {
+      let s = 0;
+      CATEGORY_KEYS[cat].forEach(function (kw) {
+        if (lower.indexOf(kw) !== -1) s += kw.indexOf(' ') !== -1 ? 2 : 1;
+      });
+      if (s > bestScore) {
+        bestScore = s;
+        best = cat;
+      }
+    });
+    if (bestScore === 0) best = 'Product Help';
+    return { category: best, score: bestScore };
+  }
+
+  function sentimentScore(text) {
+    const lower = text.toLowerCase();
+    let pos = 0, neg = 0;
+    POS_WORDS.forEach(function (w) {
+      const re = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+      const m = lower.match(re);
+      if (m) pos += m.length;
+    });
+    NEG_WORDS.forEach(function (w) {
+      let idx = 0;
+      while (true) {
+        const i = lower.indexOf(w, idx);
+        if (i === -1) break;
+        neg += 1;
+        idx = i + w.length;
+      }
+    });
+    const total = pos + neg;
+    if (total === 0) return 0;
+    const raw = (pos - neg) / Math.max(total, 4);
+    return Math.max(-1, Math.min(1, raw * 1.4));
+  }
+
+  function detectEmotion(text) {
+    const lower = text.toLowerCase();
+    const order = ['Frustrated', 'Confused', 'Satisfied'];
+    for (let i = 0; i < order.length; i++) {
+      const em = order[i];
+      const pats = EMOTION_PATTERNS[em];
+      for (let j = 0; j < pats.length; j++) {
+        if (lower.indexOf(pats[j]) !== -1) return em;
+      }
+    }
+    return 'Neutral';
+  }
+
+  function extractTopics(text, n) {
+    const tokens = tokenize(text);
+    const withBi = tokensWithBigrams(tokens);
+    const freq = {};
+    withBi.forEach(function (t) {
+      if (STOPWORDS.has(t) || t.length < 3) return;
+      freq[t] = (freq[t] || 0) + 1;
+    });
+    const sorted = Object.keys(freq).sort(function (a, b) { return freq[b] - freq[a]; });
+    return sorted.slice(0, n || 5);
+  }
+
+  function resolutionStatus(text) {
+    const lower = text.toLowerCase();
+    const esc = lower.indexOf('escalat') !== -1 || lower.indexOf('engineering') !== -1;
+    let res = 0, unr = 0;
+    RESOLVED_SIGNALS.forEach(function (s) {
+      if (lower.indexOf(s) !== -1) res++;
+    });
+    UNRESOLVED_SIGNALS.forEach(function (s) {
+      if (lower.indexOf(s) !== -1) unr++;
+    });
+    if (esc && unr >= res) return 'Escalation Needed';
+    if (res > unr && res > 0) return 'Resolved';
+    if (unr > res) return 'Unresolved';
+    return res > 0 ? 'Resolved' : 'Unresolved';
+  }
+
+  function priorityLevel(category, sentiment, emotion, resolution) {
+    let p = 1;
+    if (category === 'Technical' || category === 'Account') p += 2;
+    if (category === 'Billing') p += 1;
+    if (sentiment < -0.2) p += 2;
+    if (emotion === 'Frustrated') p += 2;
+    if (emotion === 'Confused') p += 1;
+    if (resolution === 'Escalation Needed') p += 2;
+    if (resolution === 'Unresolved') p += 1;
+    if (p >= 7) return 'Critical';
+    if (p >= 5) return 'High';
+    if (p >= 3) return 'Medium';
+    return 'Low';
+  }
+
+  function buildSummary(category, emotion, sentiment, topics, resolution) {
+    const t1 = topics[0] || 'the customer issue';
+    const t2 = topics[1] || 'related concerns';
+    const sentWord = sentiment > 0.15 ? 'generally constructive' : sentiment < -0.15 ? 'somewhat tense' : 'mixed';
+    let r = 'The conversation centers on ' + category.toLowerCase() + ', with emphasis on ' + t1 + ' and ' + t2 + '. ';
+    r += 'Tone appears ' + sentWord + ' (' + emotion.toLowerCase() + ' cues). ';
+    if (resolution === 'Resolved') r += 'Signals suggest the issue was addressed by the agent.';
+    else if (resolution === 'Escalation Needed') r += 'Technical or policy escalation may be required to fully close the loop.';
+    else r += 'Follow-up may be needed to confirm full resolution.';
+    return r;
+  }
+
+  function analyzeTranscript(text) {
+    const cat = scoreCategory(text);
+    const sent = sentimentScore(text);
+    const emotion = detectEmotion(text);
+    const topics = extractTopics(text, 5);
+    const resolution = resolutionStatus(text);
+    const priority = priorityLevel(cat.category, sent, emotion, resolution);
+    const summary = buildSummary(cat.category, emotion, sent, topics, resolution);
+    return {
+      category: cat.category,
+      sentiment: sent,
+      emotion: emotion,
+      topics: topics,
+      summary: summary,
+      resolution: resolution,
+      priority: priority
+    };
+  }
+
+  function formatSentiment(n) {
+    return (n >= 0 ? '' : '') + n.toFixed(2);
+  }
+
+  function needleRotation(score) {
+    return -90 + score * 90;
+  }
+
+  function renderSingle(a) {
+    const grid = document.getElementById('cards-grid');
+    const resClass = a.resolution === 'Resolved' ? 'pill--resolved' : a.resolution === 'Escalation Needed' ? 'pill--escalation' : 'pill--unresolved';
+    const priClass = a.priority === 'Critical' ? 'pill--crit' : a.priority === 'High' ? 'pill--high' : a.priority === 'Medium' ? 'pill--med' : 'pill--low';
+    const tags = a.topics.map(function (t, i) {
+      return '<span class="tag tag-c' + (i % 5) + '">' + escapeHtml(t) + '</span>';
+    }).join('');
+
+    grid.innerHTML =
+      '<div class="card"><div class="card__label">Issue category</div><div class="card__value">' + escapeHtml(a.category) + '</div></div>' +
+      '<div class="card"><div class="card__label">Customer emotion</div><div class="card__value">' + escapeHtml(a.emotion) + '</div></div>' +
+      '<div class="card"><div class="card__label">Resolution status</div><div class="card__value"><span class="pill ' + resClass + '">' + escapeHtml(a.resolution) + '</span></div></div>' +
+      '<div class="card"><div class="card__label">Priority level</div><div class="card__value"><span class="pill ' + priClass + '">' + escapeHtml(a.priority) + '</span></div></div>' +
+      '<div class="card"><div class="card__label">Sentiment score</div><div class="gauge-wrap">' +
+      '<div class="gauge"><svg viewBox="0 0 120 70"><defs><linearGradient id="ggrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#f87171"/><stop offset="50%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#34d399"/></linearGradient></defs>' +
+      '<path d="M 12 60 A 48 48 0 0 1 108 60" fill="none" stroke="url(#ggrad)" stroke-width="10" stroke-linecap="round"/>' +
+      '<line class="gauge-needle" id="gauge-needle" x1="60" y1="60" x2="60" y2="22" stroke="#f1f5f9" stroke-width="3" stroke-linecap="round"/></svg></div>' +
+      '<div><div class="gauge-score" id="gauge-score">' + formatSentiment(a.sentiment) + '</div><div style="font-size:0.75rem;color:var(--text-muted)">Scale: &minus;1 (negative) to +1 (positive)</div></div></div></div>' +
+      '<div class="card card--wide"><div class="card__label">Key topics</div><div class="tags">' + tags + '</div></div>' +
+      '<div class="card card--wide"><div class="card__label">Summary</div><div class="summary-text">' + escapeHtml(a.summary) + '</div></div>';
+
+    requestAnimationFrame(function () {
+      const needle = document.getElementById('gauge-needle');
+      if (needle) needle.style.transform = 'rotate(' + needleRotation(a.sentiment) + 'deg)';
+    });
+  }
+
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function runLoader(steps, done) {
+    const overlay = document.getElementById('loader');
+    const fill = document.getElementById('progress-fill');
+    const sub = document.getElementById('loader-sub');
+    overlay.classList.add('visible');
+    let i = 0;
+    let pct = 0;
+
+    function tick() {
+      if (i < steps.length) sub.textContent = steps[i];
+      pct = Math.min(100, pct + Math.random() * 18 + 8);
+      fill.style.width = pct + '%';
+      if (pct >= 100) {
+        setTimeout(function () {
+          overlay.classList.remove('visible');
+          fill.style.width = '0%';
+          done();
+        }, 280);
+        return;
+      }
+      i++;
+      setTimeout(tick, 320 + Math.random() * 200);
+    }
+    tick();
+  }
+
+  function renderBatch(rows) {
+    const tbody = document.getElementById('batch-tbody');
+    tbody.innerHTML = rows.map(function (r) {
+      return '<tr><td>' + escapeHtml(r.label) + '</td><td>' + escapeHtml(r.analysis.category) + '</td><td>' + formatSentiment(r.analysis.sentiment) + '</td><td>' + escapeHtml(r.analysis.emotion) + '</td><td>' + escapeHtml(r.analysis.resolution) + '</td><td>' + escapeHtml(r.analysis.priority) + '</td></tr>';
+    }).join('');
+
+    const cats = {};
+    let sentSum = 0;
+    let resolved = 0;
+    rows.forEach(function (r) {
+      cats[r.analysis.category] = (cats[r.analysis.category] || 0) + 1;
+      sentSum += r.analysis.sentiment;
+      if (r.analysis.resolution === 'Resolved') resolved++;
+    });
+    const topCat = Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; })[0];
+    const avgSent = sentSum / rows.length;
+    const resRate = Math.round((resolved / rows.length) * 100);
+
+    document.getElementById('batch-stats').innerHTML =
+      '<div class="stat-box"><div class="num">' + escapeHtml(topCat) + '</div><div class="lbl">Most common category</div></div>' +
+      '<div class="stat-box"><div class="num">' + avgSent.toFixed(2) + '</div><div class="lbl">Avg sentiment</div></div>' +
+      '<div class="stat-box"><div class="num">' + resRate + '%</div><div class="lbl">Resolution rate</div></div>';
+
+    drawDonut(cats);
+    drawSentimentBars(rows);
+  }
+
+  function polarToCartesian(cx, cy, r, angleDeg) {
+    const rad = (angleDeg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  function donutSlice(cx, cy, rOuter, rInner, startAngle, endAngle) {
+    const p1 = polarToCartesian(cx, cy, rOuter, endAngle);
+    const p2 = polarToCartesian(cx, cy, rOuter, startAngle);
+    const p3 = polarToCartesian(cx, cy, rInner, startAngle);
+    const p4 = polarToCartesian(cx, cy, rInner, endAngle);
+    const large = endAngle - startAngle > 180 ? 1 : 0;
+    return [
+      'M', p1.x, p1.y,
+      'A', rOuter, rOuter, 0, large, 0, p2.x, p2.y,
+      'L', p3.x, p3.y,
+      'A', rInner, rInner, 0, large, 1, p4.x, p4.y,
+      'Z'
+    ].join(' ');
+  }
+
+  function drawDonut(catCounts) {
+    const svg = document.getElementById('donut-svg');
+    const legend = document.getElementById('donut-legend');
+    const entries = Object.keys(catCounts).map(function (k) { return { name: k, v: catCounts[k] }; });
+    const total = entries.reduce(function (s, e) { return s + e.v; }, 0);
+    svg.innerHTML = '';
+    legend.innerHTML = '';
+    let angle = 0;
+    const cx = 80, cy = 80, ro = 62, ri = 38;
+    entries.forEach(function (e, idx) {
+      const sweep = (e.v / total) * 360;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', donutSlice(cx, cy, ro, ri, angle, angle + sweep));
+      path.setAttribute('fill', DONUT_COLORS[idx % DONUT_COLORS.length]);
+      path.setAttribute('stroke', '#1e293b');
+      path.setAttribute('stroke-width', '2');
+      svg.appendChild(path);
+      angle += sweep;
+      const row = document.createElement('span');
+      row.innerHTML = '<span class="swatch" style="background:' + DONUT_COLORS[idx % DONUT_COLORS.length] + '"></span> ' + escapeHtml(e.name) + ' (' + e.v + ')';
+      legend.appendChild(row);
+    });
+  }
+
+  function drawSentimentBars(rows) {
+    const el = document.getElementById('sentiment-bars');
+    const bins = { 'Very negative': 0, 'Negative': 0, 'Neutral': 0, 'Positive': 0, 'Very positive': 0 };
+    rows.forEach(function (r) {
+      const s = r.analysis.sentiment;
+      if (s <= -0.35) bins['Very negative']++;
+      else if (s < -0.05) bins['Negative']++;
+      else if (s <= 0.05) bins['Neutral']++;
+      else if (s < 0.35) bins['Positive']++;
+      else bins['Very positive']++;
+    });
+    const max = Math.max.apply(null, Object.values(bins)) || 1;
+    const colors = { 'Very negative': '#f87171', 'Negative': '#fb923c', 'Neutral': '#94a3b8', 'Positive': '#4ade80', 'Very positive': '#34d399' };
+    let html = '';
+    Object.keys(bins).forEach(function (k) {
+      const w = (bins[k] / max) * 100;
+      html += '<div class="bar-row"><span>' + escapeHtml(k) + '</span><div class="bar-track"><div class="bar-fill" style="width:' + w + '%;background:' + colors[k] + '"></div></div><span>' + bins[k] + '</span></div>';
+    });
+    el.innerHTML = html;
+  }
+
+  function buildWordCloud() {
+    const combined = Object.keys(SAMPLES).map(function (k) { return SAMPLES[k]; }).join(' ');
+    const freq = {};
+    const tokens = tokenize(combined);
+    tokens.forEach(function (t) {
+      if (STOPWORDS.has(t) || t.length < 4) return;
+      freq[t] = (freq[t] || 0) + 1;
+    });
+    const top = Object.keys(freq).sort(function (a, b) { return freq[b] - freq[a]; }).slice(0, 35);
+    const maxF = top.length ? freq[top[0]] : 1;
+    const container = document.getElementById('word-cloud');
+    container.innerHTML = '';
+    const colors = ['#c7d2fe', '#a5b4fc', '#818cf8', '#34d399', '#fbbf24', '#f1f5f9', '#7dd3fc'];
+    top.forEach(function (word, i) {
+      const span = document.createElement('span');
+      span.className = 'wc-word';
+      span.textContent = word;
+      const ratio = 0.65 + (freq[word] / maxF) * 0.9;
+      span.style.fontSize = (0.72 + ratio * 1.1) + 'rem';
+      span.style.color = colors[i % colors.length];
+      span.style.animationDelay = (i * 0.04) + 's';
+      span.title = 'Count: ' + freq[word];
+      container.appendChild(span);
+    });
+  }
+
+  function drawLineChart() {
+    const svg = document.getElementById('line-chart');
+    const w = 520, h = 220, pad = { l: 44, r: 16, t: 20, b: 36 };
+    const innerW = w - pad.l - pad.r;
+    const innerH = h - pad.t - pad.b;
+    const weeks = 12;
+    const base = [42, 48, 45, 52, 58, 55, 61, 59, 64, 68, 66, 72];
+    const maxV = Math.max.apply(null, base) * 1.1;
+    const minV = 30;
+
+    let pathD = '';
+    const pts = [];
+    for (let i = 0; i < base.length; i++) {
+      const x = pad.l + (i / (weeks - 1)) * innerW;
+      const y = pad.t + innerH - ((base[i] - minV) / (maxV - minV)) * innerH;
+      pts.push({ x: x, y: y });
+      pathD += (i === 0 ? 'M' : 'L') + x + ' ' + y + ' ';
+    }
+
+    const areaD = pathD + ' L ' + pts[pts.length - 1].x + ' ' + (pad.t + innerH) + ' L ' + pts[0].x + ' ' + (pad.t + innerH) + ' Z';
+
+    svg.innerHTML =
+      '<defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/><stop offset="100%" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>' +
+      '<rect x="0" y="0" width="' + w + '" height="' + h + '" fill="transparent"/>' +
+      '<line x1="' + pad.l + '" y1="' + (pad.t + innerH) + '" x2="' + (w - pad.r) + '" y2="' + (pad.t + innerH) + '" stroke="#334155" stroke-width="1"/>' +
+      '<line x1="' + pad.l + '" y1="' + pad.t + '" x2="' + pad.l + '" y2="' + (pad.t + innerH) + '" stroke="#334155" stroke-width="1"/>' +
+      '<path d="' + areaD + '" fill="url(#areaGrad)"/>' +
+      '<path d="' + pathD + '" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      pts.map(function (p, i) {
+        return '<circle cx="' + p.x + '" cy="' + p.y + '" r="4" fill="#6366f1" stroke="#0f172a" stroke-width="2"><title>Week ' + (i + 1) + ': ' + base[i] + ' tickets</title></circle>';
+      }).join('') +
+      '<text x="' + (w / 2) + '" y="' + (h - 8) + '" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="Inter,sans-serif">Week &rarr;</text>' +
+      '<text x="12" y="' + (pad.t + innerH / 2) + '" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif" transform="rotate(-90 12 ' + (pad.t + innerH / 2) + ')">Volume</text>';
+  }
+
+  const transcriptEl = document.getElementById('transcript');
+  const sampleSelect = document.getElementById('sample-select');
+  const batchToggle = document.getElementById('batch-toggle');
+  const singleResults = document.getElementById('single-results');
+  const batchResults = document.getElementById('batch-results');
+  let batchMode = false;
+
+  function loadSample() {
+    const key = sampleSelect.value;
+    transcriptEl.value = SAMPLES[key] || '';
+  }
+
+  sampleSelect.addEventListener('change', loadSample);
+  loadSample();
+
+  batchToggle.addEventListener('click', function () {
+    batchMode = !batchMode;
+    batchToggle.classList.toggle('on', batchMode);
+    batchToggle.setAttribute('aria-checked', batchMode ? 'true' : 'false');
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', function () {
+    transcriptEl.value = '';
+    singleResults.classList.remove('visible');
+    batchResults.classList.remove('visible');
+  });
+
+  document.getElementById('btn-analyze').addEventListener('click', function () {
+    const steps = [
+      'Tokenizing transcript…',
+      'Extracting key phrases…',
+      'Classifying issue type…',
+      'Scoring sentiment & emotion…',
+      'Generating summary…'
+    ];
+
+    if (batchMode) {
+      runLoader(steps, function () {
+        const keys = Object.keys(SAMPLES);
+        const rows = keys.map(function (k) {
+          return { key: k, label: SAMPLE_LABELS[k], analysis: analyzeTranscript(SAMPLES[k]) };
+        });
+        batchResults.classList.add('visible');
+        singleResults.classList.remove('visible');
+        renderBatch(rows);
+      });
+      return;
+    }
+
+    const text = transcriptEl.value.trim();
+    if (!text) {
+      transcriptEl.focus();
+      return;
+    }
+
+    runLoader(steps, function () {
+      const a = analyzeTranscript(text);
+      renderSingle(a);
+      singleResults.classList.add('visible');
+      batchResults.classList.remove('visible');
+    });
+  });
+
+  buildWordCloud();
+  drawLineChart();
+})();
+  </script>
+</body>
+</html>

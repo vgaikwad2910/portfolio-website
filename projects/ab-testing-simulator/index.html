@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A/B Testing Lab — Interactive Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-elevated: #334155;
+      --accent: #6366f1;
+      --accent-dim: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.35);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --success: #34d399;
+      --success-bg: rgba(52, 211, 153, 0.12);
+      --danger: #f87171;
+      --danger-bg: rgba(248, 113, 113, 0.12);
+      --warn: #fbbf24;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .noise {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 1.25rem 4rem;
+    }
+
+    header.top {
+      padding: 1.25rem 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      transition: opacity 0.15s;
+    }
+    .back:hover { opacity: 0.85; }
+
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.5rem;
+      background: linear-gradient(135deg, var(--text) 0%, #c7d2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 42rem;
+      margin: 0;
+    }
+
+    nav.tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 1.5rem;
+    }
+
+    nav.tabs button {
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+
+    nav.tabs button:hover {
+      color: var(--text);
+      border-color: var(--accent-dim);
+    }
+
+    nav.tabs button.active {
+      background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    section.panel {
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+    section.panel.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .card h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+
+    .card .lead {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin: 0 0 1.25rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    label .tip {
+      cursor: help;
+      border-bottom: 1px dotted var(--text-muted);
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .field { margin-bottom: 1rem; }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+
+    button.primary, button.secondary {
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 0.65rem 1.15rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
+      color: #fff;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    button.primary:hover { transform: translateY(-1px); }
+    button.primary:active { transform: translateY(0); }
+
+    button.secondary {
+      background: var(--bg-elevated);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:hover { border-color: var(--accent); }
+
+    .out {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.15rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .out strong { color: var(--accent); }
+    .out-row { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 0.35rem 0; font-size: 0.9rem; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.75rem;
+    }
+
+    .badge.ok { background: var(--success-bg); color: var(--success); }
+    .badge.no { background: var(--danger-bg); color: var(--danger); }
+
+    .chart-wrap {
+      margin-top: 1rem;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #0c1222;
+    }
+
+    canvas.chart {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+    }
+
+    .legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+    .footnote {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+    }
+
+    code.inline {
+      background: var(--bg);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+      border: 1px solid var(--border);
+    }
+
+    .seq-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .seq-controls label { margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+    .seq-controls input[type="range"] { width: 160px; accent-color: var(--accent); }
+
+    table.mc {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+    }
+
+    table.mc th, table.mc td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.65rem;
+      text-align: left;
+    }
+
+    table.mc th { background: var(--bg); color: var(--text-muted); font-weight: 500; }
+
+    .kpi {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .kpi .box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+      text-align: center;
+    }
+
+    .kpi .box .val { font-size: 1.35rem; font-weight: 700; color: var(--accent); }
+    .kpi .box .lbl { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  </style>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="wrap">
+    <header class="top">
+      <a class="back" href="../../index.html">← Back to Portfolio</a>
+      <h1>A/B Testing Lab</h1>
+      <p class="subtitle">Interactive tools for power, inference, sequential design, traffic quality, and multiplicity—statistics computed in your browser, no libraries.</p>
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button type="button" class="active" data-tab="power" role="tab" aria-selected="true">Power analysis</button>
+        <button type="button" data-tab="sim" role="tab" aria-selected="false">A/B simulator</button>
+        <button type="button" data-tab="seq" role="tab" aria-selected="false">Sequential testing</button>
+        <button type="button" data-tab="srm" role="tab" aria-selected="false">SRM detector</button>
+        <button type="button" data-tab="multi" role="tab" aria-selected="false">Multiple comparisons</button>
+      </nav>
+    </header>
+
+    <!-- 1. Power -->
+    <section id="panel-power" class="panel active" role="tabpanel">
+      <div class="card">
+        <h2>Power analysis calculator</h2>
+        <p class="lead">Estimate per-group sample size for a two-proportion <span class="tip" title="Assumes equal allocation, two-sided pooled z-test, normal approximation.">z-test</span> and see how power rises with <code class="inline">n</code>. MDE is the <strong>absolute</strong> lift in conversion rate (e.g. 0.02 = +2 percentage points).</p>
+        <div class="grid-2">
+          <div>
+            <div class="field">
+              <label><span class="tip" title="True or historical conversion rate for control.">Baseline rate</span> (0–1)</label>
+              <input type="number" id="pow-p0" value="0.12" min="0.001" max="0.999" step="0.001" />
+            </div>
+            <div class="field">
+              <label><span class="tip" title="Minimum absolute difference between treatment and control you want to detect.">MDE (absolute)</span></label>
+              <input type="number" id="pow-mde" value="0.02" min="0.0001" max="0.5" step="0.001" />
+            </div>
+            <div class="field">
+              <label><span class="tip" title="Type I error rate; probability of declaring a winner under no true effect.">Significance α</span></label>
+              <input type="number" id="pow-alpha" value="0.05" min="0.001" max="0.2" step="0.001" />
+            </div>
+            <div class="field">
+              <label><span class="tip" title="Probability of detecting a true effect of size MDE.">Power (1 − β)</span></label>
+              <input type="number" id="pow-power" value="0.8" min="0.5" max="0.99" step="0.01" />
+            </div>
+            <div class="field">
+              <label><span class="tip" title="Total unique visitors per day (both arms). Duration = 2 × n / daily.">Daily traffic</span> (total)</label>
+              <input type="number" id="pow-daily" value="5000" min="10" step="100" />
+            </div>
+            <button type="button" class="primary" id="pow-calc">Calculate</button>
+          </div>
+          <div>
+            <div class="out" id="pow-out">
+              <p style="margin:0;color:var(--text-muted);font-size:0.9rem;">Adjust inputs and click Calculate.</p>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="pow-canvas" class="chart" width="640" height="280" aria-label="Power curve"></canvas>
+            </div>
+            <p class="footnote">Curve: power vs. sample size per group at your baseline, MDE, and α (two-sided normal approximation).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Simulator -->
+    <section id="panel-sim" class="panel" role="tabpanel" hidden>
+      <div class="card">
+        <h2>A/B test simulator</h2>
+        <p class="lead">Draw binomial outcomes for control and treatment, then run a pooled two-sided z-test. Under the null, p-values should be uniform; under a real effect, power shows up as more small p-values.</p>
+        <div class="grid-2">
+          <div>
+            <div class="field">
+              <label><span class="tip" title="Underlying probability for control arm.">True control rate</span></label>
+              <input type="number" id="sim-p0" value="0.12" min="0.001" max="0.999" step="0.001" />
+            </div>
+            <div class="field">
+              <label><span class="tip" title="Underlying probability for treatment arm.">True treatment rate</span></label>
+              <input type="number" id="sim-p1" value="0.14" min="0.001" max="0.999" step="0.001" />
+            </div>
+            <div class="field">
+              <label><span class="tip" title="Users per arm.">Sample size per group</span></label>
+              <input type="number" id="sim-n" value="5000" min="10" step="100" />
+            </div>
+            <div class="btn-row">
+              <button type="button" class="primary" id="sim-run">Run simulation</button>
+              <button type="button" class="secondary" id="sim-1000">Run 1000 simulations</button>
+            </div>
+            <p class="footnote">Z-test uses pooled SE under <code class="inline">H₀: p_A = p_B</code>. CI is Wald for the difference using unpooled SE.</p>
+          </div>
+          <div>
+            <div class="out" id="sim-out">
+              <p style="margin:0;color:var(--text-muted);font-size:0.9rem;">Run a single simulation to see rates, z, p-value, and CI.</p>
+            </div>
+            <div class="chart-wrap" style="margin-top:1rem;">
+              <canvas id="sim-hist" class="chart" width="640" height="260" aria-label="P-value histogram"></canvas>
+            </div>
+            <div class="out" id="sim-batch" style="margin-top:1rem;display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Sequential -->
+    <section id="panel-seq" class="panel" role="tabpanel" hidden>
+      <div class="card">
+        <h2>Sequential testing &amp; peeking</h2>
+        <p class="lead">Cumulative z-statistics are compared to <strong>O'Brien–Fleming</strong>-style boundaries (5 looks) vs. a <strong>fixed horizon</strong> check only at the end. Re-using the naive α threshold at every peek <strong>inflates the false positive rate</strong>—that is what “peeking” illustrates.</p>
+        <div class="seq-controls">
+          <label><input type="checkbox" id="seq-animate" checked /> Animate</label>
+          <label>Speed <input type="range" id="seq-speed" min="1" max="8" value="4" /></label>
+          <button type="button" class="primary" id="seq-play">Play demo</button>
+          <button type="button" class="secondary" id="seq-reset">Reset</button>
+        </div>
+        <div class="field" style="max-width:320px;">
+          <label><span class="tip" title="Used only to shape the path of cumulative z; boundaries are fixed for α=0.05.">Drift (treatment − control)</span> for visualization</label>
+          <input type="number" id="seq-drift" value="0" min="-0.1" max="0.1" step="0.005" />
+        </div>
+        <div class="chart-wrap">
+          <canvas id="seq-canvas" class="chart" width="720" height="360" aria-label="Sequential boundaries chart"></canvas>
+        </div>
+        <div class="legend">
+          <span><i class="swatch" style="background:#6366f1;"></i> Cumulative |Z|</span>
+          <span><i class="swatch" style="background:#34d399;"></i> O'Brien–Fleming boundary</span>
+          <span><i class="swatch" style="background:#94a3b8;"></i> Fixed horizon (1.96 at end)</span>
+          <span><i class="swatch" style="background:#f87171;border:1px dashed #f87171;background:transparent;"></i> Naive peeking threshold (1.96 each look)</span>
+        </div>
+        <p class="footnote">Boundaries approximate standard two-sided OBF for K=5 interim analyses at α=0.05 (Jennison &amp; Turnbull–style nominal levels). The path is one synthetic cumulative z built from partial sums of normal noise plus drift.</p>
+      </div>
+    </section>
+
+    <!-- 4. SRM -->
+    <section id="panel-srm" class="panel" role="tabpanel" hidden>
+      <div class="card">
+        <h2>Sample ratio mismatch (SRM)</h2>
+        <p class="lead">Compare observed assignment counts to the expected split using a chi-squared goodness-of-fit test. Large discrepancies suggest assignment bugs, targeting issues, or funnel drop-off that is not random.</p>
+        <div class="grid-2">
+          <div>
+            <div class="field">
+              <label><span class="tip" title="Expected fraction of traffic in control (treatment gets 1 − this).">Expected control fraction</span></label>
+              <input type="number" id="srm-exp" value="0.5" min="0.01" max="0.99" step="0.01" />
+            </div>
+            <div class="field">
+              <label>Observed control count</label>
+              <input type="number" id="srm-a" value="5120" min="0" step="1" />
+            </div>
+            <div class="field">
+              <label>Observed treatment count</label>
+              <input type="number" id="srm-b" value="4880" min="0" step="1" />
+            </div>
+            <button type="button" class="primary" id="srm-calc">Run χ² test</button>
+          </div>
+          <div>
+            <div class="out" id="srm-out"></div>
+            <div class="chart-wrap" style="margin-top:1rem;">
+              <canvas id="srm-canvas" class="chart" width="480" height="200" aria-label="Expected vs observed"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Multiple -->
+    <section id="panel-multi" class="panel" role="tabpanel" hidden>
+      <div class="card">
+        <h2>Multiple comparisons</h2>
+        <p class="lead">Simulate <strong>20 independent metrics</strong>, all truly null (noise only). At α=0.05 you still expect about one “significant” metric by chance. <strong>Bonferroni</strong> controls family-wise error; <strong>Benjamini–Hochberg</strong> controls false discovery rate (less conservative).</p>
+        <div class="btn-row">
+          <button type="button" class="primary" id="multi-run">Simulate 20 metrics</button>
+          <button type="button" class="secondary" id="multi-rerun">New draw</button>
+        </div>
+        <div class="kpi" id="multi-kpi"></div>
+        <div class="chart-wrap" style="margin-top:1rem;">
+          <canvas id="multi-canvas" class="chart" width="720" height="280" aria-label="P-values and thresholds"></canvas>
+        </div>
+        <table class="mc" id="multi-table">
+          <thead><tr><th>Metric</th><th>p-value</th><th>Raw α=0.05</th><th>Bonferroni</th><th>BH (FDR 5%)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="footnote">Each metric is a two-sided z-test from equal n=10,000 per arm with identical true rates (0.10)—only sampling noise differs.</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+(function () {
+  'use strict';
+
+  // ---- Core stats (no libraries) ----
+  function erf(x) {
+    const sign = x < 0 ? -1 : 1;
+    x = Math.abs(x);
+    const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429;
+    const p = 0.3275911;
+    const t = 1 / (1 + p * x);
+    const y = 1 - (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t) * Math.exp(-x * x);
+    return sign * y;
+  }
+
+  function normCDF(x) {
+    return 0.5 * (1 + erf(x / Math.SQRT2));
+  }
+
+  function normInv(p) {
+    if (p <= 0 || p >= 1) return NaN;
+    const a = [-3.9696830289e1, 2.2094609845e2, -2.7592851049e2, 1.3835775186e2, -3.0664798060e1, 2.5066282774e0];
+    const b = [-5.4476096983e1, 1.6158583684e2, -1.5569897984e2, 6.6801311887e1, -1.3280681552e1];
+    const c = [-7.7848940020e-3, -3.2239645804e-1, -2.4007582771e0, -2.5497325393e0, 4.3746641415e0, 2.9381639828e0];
+    const d = [7.7846957099e-3, 3.2246712907e-1, 2.4451341820e0, 3.7544086619e0];
+    const plow = 0.02425;
+    const phigh = 1 - plow;
+    let q, r;
+    if (p < plow) {
+      q = Math.sqrt(-2 * Math.log(p));
+      return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+        ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+    if (p <= phigh) {
+      q = p - 0.5;
+      r = q * q;
+      return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+        (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+    }
+    q = Math.sqrt(-2 * Math.log(1 - p));
+    return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+      ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+  }
+
+  function twoPropZTest(x1, n1, x2, n2) {
+    const p1 = x1 / n1;
+    const p2 = x2 / n2;
+    const pPool = (x1 + x2) / (n1 + n2);
+    const se = Math.sqrt(pPool * (1 - pPool) * (1 / n1 + 1 / n2));
+    if (se === 0) return { z: 0, p: 1, p1, p2, pPool };
+    const z = (p2 - p1) / se;
+    const p = 2 * (1 - normCDF(Math.abs(z)));
+    return { z, p, p1, p2, pPool, se };
+  }
+
+  function waldCIDiff(x1, n1, x2, n2, level) {
+    const p1 = x1 / n1;
+    const p2 = x2 / n2;
+    const se = Math.sqrt(p1 * (1 - p1) / n1 + p2 * (1 - p2) / n2);
+    const zc = normInv(1 - (1 - level) / 2);
+    const d = p2 - p1;
+    return { low: d - zc * se, high: d + zc * se, d, se };
+  }
+
+  function binomialSample(n, p, rng) {
+    let s = 0;
+    for (let i = 0; i < n; i++) if (rng() < p) s++;
+    return s;
+  }
+
+  function rngFactory() {
+    let s = Date.now() % 2147483647;
+    if (s <= 0) s = 123456789;
+    return function () {
+      s = (s * 48271) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
+  }
+
+  function randn(rng) {
+    let u = 0;
+    let v = 0;
+    while (u === 0) u = rng();
+    while (v === 0) v = rng();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  }
+
+  // Power for two-sided two-sample proportion test (equal n), normal approx
+  function powerTwoProp(p0, p1, nPerGroup, alpha) {
+    const za = normInv(1 - alpha / 2);
+    const se = Math.sqrt(p0 * (1 - p0) / nPerGroup + p1 * (1 - p1) / nPerGroup);
+    if (se === 0) return 0;
+    const delta = p1 - p0;
+    const z = delta / se;
+    return 1 - normCDF(za - z) + normCDF(-za - z);
+  }
+
+  function sampleSizeTwoProp(p0, p1, alpha, targetPower) {
+    const za = normInv(1 - alpha / 2);
+    const zb = normInv(targetPower);
+    const delta = Math.abs(p1 - p0);
+    if (delta < 1e-12) return Infinity;
+    const v = p0 * (1 - p0) + p1 * (1 - p1);
+    const n = Math.ceil(((za + zb) ** 2 * v) / (delta * delta));
+    return Math.max(1, n);
+  }
+
+  // Chi-square CDF for df=1 (SRM): via normal approx to sqrt(2X)-sqrt(2df-1) ... use Wilson-Hilferty or direct series
+  function chiSquareCDF1(x) {
+    if (x <= 0) return 0;
+    return 2 * normCDF(Math.sqrt(x)) - 1;
+  }
+
+  // ---- Canvas helpers ----
+  function setupHiDPICanvas(canvas) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width || canvas.width;
+    const h = rect.height || canvas.height;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w, h };
+  }
+
+  function drawAxes(ctx, w, h, pad, xLabel, yLabel) {
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t);
+    ctx.lineTo(pad.l, h - pad.b);
+    ctx.lineTo(w - pad.r, h - pad.b);
+    ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Inter, sans-serif';
+    if (xLabel) ctx.fillText(xLabel, (pad.l + w - pad.r) / 2 - 40, h - 8);
+    if (yLabel) {
+      ctx.save();
+      ctx.translate(14, (pad.t + h - pad.b) / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(yLabel, -20, 0);
+      ctx.restore();
+    }
+  }
+
+  // ---- Tabs ----
+  const tabBtns = document.querySelectorAll('nav.tabs button');
+  const panels = {
+    power: document.getElementById('panel-power'),
+    sim: document.getElementById('panel-sim'),
+    seq: document.getElementById('panel-seq'),
+    srm: document.getElementById('panel-srm'),
+    multi: document.getElementById('panel-multi'),
+  };
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-tab');
+      tabBtns.forEach((b) => {
+        b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+      });
+      Object.keys(panels).forEach((k) => {
+        const p = panels[k];
+        const on = k === id;
+        p.classList.toggle('active', on);
+        p.hidden = !on;
+      });
+      if (id === 'power') drawPowerCurve();
+      if (id === 'seq') drawSeqFrame(seqState);
+    });
+  });
+
+  // ---- 1. Power ----
+  function drawPowerCurve() {
+    const canvas = document.getElementById('pow-canvas');
+    const pad = { l: 48, r: 18, t: 18, b: 42 };
+    const { ctx, w, h } = setupHiDPICanvas(canvas);
+    const p0 = +document.getElementById('pow-p0').value;
+    const mde = +document.getElementById('pow-mde').value;
+    const alpha = +document.getElementById('pow-alpha').value;
+    const p1 = Math.min(0.999, Math.max(0.001, p0 + mde));
+
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, w, h);
+
+    const nMin = 50;
+    const nMax = Math.max(500, sampleSizeTwoProp(p0, p1, alpha, 0.8) * 2.5);
+    const steps = 80;
+    const powers = [];
+    let maxP = 0;
+    for (let i = 0; i <= steps; i++) {
+      const n = nMin + (i / steps) * (nMax - nMin);
+      const pw = powerTwoProp(p0, p1, Math.round(n), alpha);
+      powers.push({ n: Math.round(n), pw });
+      maxP = Math.max(maxP, pw);
+    }
+
+    const x0 = pad.l;
+    const x1 = w - pad.r;
+    const y0 = h - pad.b;
+    const y1 = pad.t;
+    const mapX = (n) => x0 + ((n - nMin) / (nMax - nMin)) * (x1 - x0);
+    const mapY = (pw) => y0 - (pw / Math.max(1, maxP * 1.05)) * (y0 - y1);
+
+    drawAxes(ctx, w, h, pad, 'n per group', 'Power');
+
+    ctx.strokeStyle = '#6366f1';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    powers.forEach((pt, i) => {
+      const x = mapX(pt.n);
+      const y = mapY(pt.pw);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    const targetPow = +document.getElementById('pow-power').value;
+    const nReq = sampleSizeTwoProp(p0, p1, alpha, targetPow);
+    if (Number.isFinite(nReq) && nReq <= nMax) {
+      const xr = mapX(nReq);
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.beginPath();
+      ctx.moveTo(xr, y1);
+      ctx.lineTo(xr, y0);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#c7d2fe';
+      ctx.font = '10px Inter, sans-serif';
+      ctx.fillText('n* ≈ ' + nReq, Math.min(xr + 4, x1 - 50), y1 + 14);
+    }
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillText('0', x0 - 6, y0 + 12);
+    ctx.fillText(String(Math.round(nMax)), x1 - 28, y0 + 12);
+    ctx.fillText('0', x0 - 20, y0);
+    ctx.fillText('1', x0 - 20, y1 + 4);
+  }
+
+  function runPowerCalc() {
+    const p0 = +document.getElementById('pow-p0').value;
+    const mde = +document.getElementById('pow-mde').value;
+    const alpha = +document.getElementById('pow-alpha').value;
+    const targetPow = +document.getElementById('pow-power').value;
+    const daily = +document.getElementById('pow-daily').value;
+    const p1 = p0 + mde;
+
+    const out = document.getElementById('pow-out');
+    if (p1 <= 0 || p1 >= 1 || p0 <= 0 || p0 >= 1) {
+      out.innerHTML = '<p style="color:var(--danger);margin:0;">Invalid rates: keep baseline and baseline+MDE strictly between 0 and 1.</p>';
+      drawPowerCurve();
+      return;
+    }
+
+    const n = sampleSizeTwoProp(p0, p1, alpha, targetPow);
+    const totalUsers = 2 * n;
+    const days = totalUsers / Math.max(1, daily);
+
+    out.innerHTML =
+      '<div class="out-row"><span>Per-group sample size <code class="inline">n</code></span><strong>' + n.toLocaleString() + '</strong></div>' +
+      '<div class="out-row"><span>Total users (50/50)</span><strong>' + totalUsers.toLocaleString() + '</strong></div>' +
+      '<div class="out-row"><span>Est. duration at ' + daily.toLocaleString() + ' visitors/day</span><strong>' +
+      (days < 1 ? (days * 24).toFixed(1) + ' hours' : days.toFixed(1) + ' days') + '</strong></div>' +
+      '<div class="out-row"><span>MDE modeled as</span><strong>p₁ = ' + p0.toFixed(4) + ' + ' + mde.toFixed(4) + ' = ' + p1.toFixed(4) + '</strong></div>';
+
+    drawPowerCurve();
+  }
+
+  document.getElementById('pow-calc').addEventListener('click', runPowerCalc);
+  ['pow-p0', 'pow-mde', 'pow-alpha', 'pow-power', 'pow-daily'].forEach((id) => {
+    document.getElementById(id).addEventListener('change', () => {
+      if (document.getElementById('panel-power').classList.contains('active')) drawPowerCurve();
+    });
+  });
+  window.addEventListener('resize', () => {
+    if (document.getElementById('panel-power').classList.contains('active')) drawPowerCurve();
+  });
+
+  // ---- 2. Simulator ----
+  function runSingleSim() {
+    const p0 = +document.getElementById('sim-p0').value;
+    const p1 = +document.getElementById('sim-p1').value;
+    const n = Math.round(+document.getElementById('sim-n').value);
+    const rng = rngFactory();
+    const x0 = binomialSample(n, p0, rng);
+    const x1 = binomialSample(n, p1, rng);
+    const test = twoPropZTest(x0, n, x1, n);
+    const ci = waldCIDiff(x0, n, x1, n, 0.95);
+    const alpha = 0.05;
+    const sig = test.p < alpha;
+    const el = document.getElementById('sim-out');
+    el.innerHTML =
+      '<div class="out-row"><span>Observed control</span><strong>' + (100 * test.p1).toFixed(2) + '%</strong> <span style="color:var(--text-muted)">(' + x0 + '/' + n + ')</span></div>' +
+      '<div class="out-row"><span>Observed treatment</span><strong>' + (100 * test.p2).toFixed(2) + '%</strong> <span style="color:var(--text-muted)">(' + x1 + '/' + n + ')</span></div>' +
+      '<div class="out-row"><span>Z statistic</span><strong>' + test.z.toFixed(4) + '</strong></div>' +
+      '<div class="out-row"><span>Two-sided p-value</span><strong>' + (test.p < 1e-6 ? '<1e-6' : test.p.toFixed(6)) + '</strong></div>' +
+      '<div class="out-row"><span>95% CI for p_B − p_A</span><strong>[' + (100 * ci.low).toFixed(3) + 'pp, ' + (100 * ci.high).toFixed(3) + 'pp]</strong></div>' +
+      '<div class="' + (sig ? 'badge ok' : 'badge no') + '">' + (sig ? 'Significant at α=0.05' : 'Not significant at α=0.05') + '</div>';
+  }
+
+  function drawPValueHist(pvals, subtitle) {
+    const canvas = document.getElementById('sim-hist');
+    const pad = { l: 42, r: 12, t: 14, b: 36 };
+    const { ctx, w, h } = setupHiDPICanvas(canvas);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, w, h);
+
+    const bins = 20;
+    const hist = new Array(bins).fill(0);
+    pvals.forEach((p) => {
+      const i = Math.min(bins - 1, Math.floor(p * bins));
+      hist[i]++;
+    });
+    const maxC = Math.max(1, ...hist);
+    const x0 = pad.l;
+    const x1 = w - pad.r;
+    const y0 = h - pad.b;
+    const y1 = pad.t;
+    const bw = (x1 - x0) / bins;
+
+    drawAxes(ctx, w, h, pad, 'p-value bin', 'Count');
+
+    for (let i = 0; i < bins; i++) {
+      const bh = ((y0 - y1) * hist[i]) / maxC;
+      ctx.fillStyle = i < bins * 0.05 ? 'rgba(248,113,113,0.55)' : 'rgba(99,102,241,0.65)';
+      ctx.fillRect(x0 + i * bw + 1, y0 - bh, bw - 2, bh);
+    }
+
+    ctx.strokeStyle = '#fbbf24';
+    ctx.setLineDash([4, 3]);
+    const xCut = x0 + 0.05 * (x1 - x0);
+    ctx.beginPath();
+    ctx.moveTo(xCut, y1);
+    ctx.lineTo(xCut, y0);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Inter, sans-serif';
+    if (subtitle) ctx.fillText(subtitle, x0, h - 10);
+  }
+
+  function run1000() {
+    const p0 = +document.getElementById('sim-p0').value;
+    const p1 = +document.getElementById('sim-p1').value;
+    const n = Math.round(+document.getElementById('sim-n').value);
+    const pvals = [];
+    const rng = rngFactory();
+    for (let r = 0; r < 1000; r++) {
+      const x0 = binomialSample(n, p0, rng);
+      const x1 = binomialSample(n, p1, rng);
+      pvals.push(twoPropZTest(x0, n, x1, n).p);
+    }
+    const fp = pvals.filter((p) => p < 0.05).length;
+    const batch = document.getElementById('sim-batch');
+    batch.style.display = 'block';
+    const isNull = Math.abs(p1 - p0) < 1e-9;
+    batch.innerHTML =
+      '<div class="out-row"><span>Share of runs with p &lt; 0.05</span><strong>' + (fp / 10).toFixed(1) + '%</strong> (' + fp + '/1000)</div>' +
+      '<p class="footnote" style="margin:0.5rem 0 0;">' +
+      (isNull
+        ? 'Under <strong>H₀</strong> (equal true rates), this fraction estimates the <strong>Type I error rate</strong> and should hover near 5% across many batches.'
+        : 'With a true effect, this fraction reflects <strong>power</strong> (plus Monte Carlo noise); it should exceed α when the effect is detectable at your n.') +
+      '</p>';
+
+    drawPValueHist(
+      pvals,
+      'Yellow line: α=0.05. Red-ish bins: p < 0.05 region.'
+    );
+  }
+
+  document.getElementById('sim-run').addEventListener('click', runSingleSim);
+  document.getElementById('sim-1000').addEventListener('click', run1000);
+
+  // ---- 3. Sequential OBF ----
+  // Two-sided OBF, K=5, alpha=0.05: nominal boundaries on standardized cumulative Z at each look (symmetric)
+  const OBF_K = 5;
+  const OBF_BOUND = [4.562, 3.225, 2.634, 2.281, 2.040];
+
+  /** Cumulative two-sample z path: incremental normal noise + optional drift (visual only). */
+  function buildSeqPath(drift, rng) {
+    const totalSteps = 100;
+    const fracAtStep = [];
+    const zPath = [];
+    let acc = 0;
+    for (let t = 1; t <= totalSteps; t++) {
+      const frac = t / totalSteps;
+      acc += randn(rng) + drift * 2.2;
+      const z = Math.abs(acc / Math.sqrt(t));
+      zPath.push(z);
+      fracAtStep.push(frac);
+    }
+    return { fracAtStep, zPath, totalSteps };
+  }
+
+  let seqState = { path: null, step: 0, timer: null, drift: 0 };
+
+  function obfBoundaryAtFraction(frac) {
+    const k = Math.max(1, Math.min(OBF_K, Math.ceil(frac * OBF_K)));
+    return OBF_BOUND[k - 1];
+  }
+
+  function drawSeqFrame(state) {
+    const canvas = document.getElementById('seq-canvas');
+    const pad = { l: 52, r: 22, t: 18, b: 40 };
+    const { ctx, w, h } = setupHiDPICanvas(canvas);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, w, h);
+
+    const x0 = pad.l;
+    const x1 = w - pad.r;
+    const y0 = h - pad.b;
+    const y1 = pad.t;
+    const zMax = 5;
+
+    drawAxes(ctx, w, h, pad, 'Information fraction (trial progress)', '|Z|');
+
+    function xf(f) {
+      return x0 + f * (x1 - x0);
+    }
+    function yz(z) {
+      return y0 - (Math.min(zMax, Math.abs(z)) / zMax) * (y0 - y1);
+    }
+
+    // OF boundary curve (stepwise by look)
+    ctx.strokeStyle = 'rgba(52,211,153,0.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const f = i / 200;
+      const b = obfBoundaryAtFraction(f);
+      const x = xf(f);
+      const y = yz(b);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Naive 1.96 every peek (horizontal band)
+    ctx.strokeStyle = 'rgba(248,113,113,0.6)';
+    ctx.setLineDash([5, 4]);
+    const y196 = yz(1.96);
+    ctx.beginPath();
+    ctx.moveTo(x0, y196);
+    ctx.lineTo(x1, y196);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Fixed: only at end
+    ctx.strokeStyle = '#94a3b8';
+    ctx.beginPath();
+    ctx.moveTo(x1, y196);
+    ctx.lineTo(x1, yz(0));
+    ctx.stroke();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillText('End only: 1.96', x1 - 78, y196 - 6);
+
+    // Path
+    if (state.path) {
+      const upto = Math.min(state.step, state.path.zPath.length);
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let i = 0; i < upto; i++) {
+        const x = xf(state.path.fracAtStep[i]);
+        const y = yz(Math.abs(state.path.zPath[i]));
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillText('0', x0 - 10, y0 + 12);
+    ctx.fillText('1', x1 - 6, y0 + 12);
+    ctx.fillText('0', x0 - 24, y0);
+    ctx.fillText(String(zMax), x0 - 24, y1 + 4);
+
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('OBF boundary', x0 + 8, y1 + 14);
+    ctx.fillStyle = '#f87171';
+    ctx.fillText('Naive peek @1.96', x0 + 110, y1 + 14);
+  }
+
+  function seqReset() {
+    if (seqState.timer) clearInterval(seqState.timer);
+    seqState.timer = null;
+    seqState.step = 0;
+    seqState.path = null;
+    drawSeqFrame(seqState);
+  }
+
+  function seqPlay() {
+    seqReset();
+    const drift = +document.getElementById('seq-drift').value;
+    const rng = rngFactory();
+    seqState.path = buildSeqPath(drift, rng);
+    seqState.step = 0;
+    const animate = document.getElementById('seq-animate').checked;
+    const speed = +document.getElementById('seq-speed').value;
+    if (!animate) {
+      seqState.step = seqState.path.zPath.length;
+      drawSeqFrame(seqState);
+      return;
+    }
+    seqState.timer = setInterval(() => {
+      seqState.step++;
+      drawSeqFrame(seqState);
+      if (seqState.step >= seqState.path.zPath.length) {
+        clearInterval(seqState.timer);
+        seqState.timer = null;
+      }
+    }, Math.max(30, 220 - speed * 22));
+  }
+
+  document.getElementById('seq-play').addEventListener('click', seqPlay);
+  document.getElementById('seq-reset').addEventListener('click', seqReset);
+
+  // ---- 4. SRM ----
+  function runSRM() {
+    const exp = +document.getElementById('srm-exp').value;
+    const oA = +document.getElementById('srm-a').value;
+    const oB = +document.getElementById('srm-b').value;
+    const out = document.getElementById('srm-out');
+    const n = oA + oB;
+    if (n <= 0 || exp <= 0 || exp >= 1) {
+      out.innerHTML = '<p style="color:var(--danger);">Enter valid counts and expected control fraction in (0,1).</p>';
+      return;
+    }
+    const eA = n * exp;
+    const eB = n * (1 - exp);
+    const chi2 = Math.pow(oA - eA, 2) / eA + Math.pow(oB - eB, 2) / eB;
+    const p = 1 - chiSquareCDF1(chi2);
+    const alpha = 0.001;
+    const pass = p >= alpha;
+
+    out.innerHTML =
+      '<div class="out-row"><span>χ² statistic (df=1)</span><strong>' + chi2.toFixed(4) + '</strong></div>' +
+      '<div class="out-row"><span>p-value</span><strong>' + (p < 1e-6 ? '<1e-6' : p.toFixed(6)) + '</strong></div>' +
+      '<div class="out-row"><span>Rule of thumb threshold</span><strong>p &lt; 0.001 → investigate</strong></div>' +
+      '<div class="' + (pass ? 'badge ok' : 'badge no') + '">' + (pass ? 'Pass: no strong evidence of SRM' : 'Fail: possible assignment imbalance') + '</div>' +
+      '<p class="footnote">Expected: control ' + eA.toFixed(1) + ', treatment ' + eB.toFixed(1) + ' (given n=' + n + ').</p>';
+
+    const canvas = document.getElementById('srm-canvas');
+    const { ctx, w, h } = setupHiDPICanvas(canvas);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, w, h);
+    const base = h - 36;
+    const top = 28;
+    const maxV = Math.max(oA, oB, eA, eB) * 1.12;
+    const hScale = (base - top) / maxV;
+    const gap = 16;
+    const groupW = (w - gap * 3) / 2;
+    const inner = groupW / 2 - 6;
+    const xC = gap;
+    const xT = gap * 2 + groupW;
+
+    function pair(x0, expV, obsV, expCol, obsCol) {
+      ctx.fillStyle = expCol;
+      ctx.fillRect(x0, base - expV * hScale, inner, expV * hScale);
+      ctx.fillStyle = obsCol;
+      ctx.fillRect(x0 + inner + 8, base - obsV * hScale, inner, obsV * hScale);
+    }
+
+    pair(xC, eA, oA, 'rgba(99,102,241,0.55)', 'rgba(129,140,248,0.95)');
+    pair(xT, eB, oB, 'rgba(52,211,153,0.45)', 'rgba(52,211,153,0.95)');
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.fillText('Control — expected · observed', xC, 18);
+    ctx.fillText('Treatment — expected · observed', xT, 18);
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('Exp', xC + inner * 0.35, base + 14);
+    ctx.fillText('Obs', xC + inner + 8 + inner * 0.25, base + 14);
+    ctx.fillText('Exp', xT + inner * 0.35, base + 14);
+    ctx.fillText('Obs', xT + inner + 8 + inner * 0.25, base + 14);
+  }
+
+  document.getElementById('srm-calc').addEventListener('click', runSRM);
+
+  // ---- 5. Multiple comparisons ----
+  /** BH FDR: reject the k smallest p-values where k is largest with p_(k) ≤ (k/m)·q */
+  function benjaminiHochberg(pvals, q) {
+    const m = pvals.length;
+    const order = pvals.map((p, i) => ({ p, i })).sort((a, b) => a.p - b.p);
+    let k = 0;
+    for (let j = m; j >= 1; j--) {
+      if (order[j - 1].p <= (q * j) / m) {
+        k = j;
+        break;
+      }
+    }
+    const reject = new Array(m).fill(false);
+    for (let j = 0; j < k; j++) {
+      reject[order[j].i] = true;
+    }
+    return reject;
+  }
+
+  function runMulti() {
+    const n = 10000;
+    const pTrue = 0.1;
+    const rng = rngFactory();
+    const pvals = [];
+    for (let m = 0; m < 20; m++) {
+      const x0 = binomialSample(n, pTrue, rng);
+      const x1 = binomialSample(n, pTrue, rng);
+      pvals.push(twoPropZTest(x0, n, x1, n).p);
+    }
+
+    const raw = pvals.filter((p) => p < 0.05).length;
+    const bonfAlpha = 0.05 / 20;
+    const bonf = pvals.filter((p) => p < bonfAlpha).length;
+    const bhReject = benjaminiHochberg(pvals.slice(), 0.05);
+    const bhCount = bhReject.filter(Boolean).length;
+
+    const kpi = document.getElementById('multi-kpi');
+    kpi.innerHTML =
+      '<div class="box"><div class="val">' + raw + '</div><div class="lbl">Raw p&lt;0.05</div></div>' +
+      '<div class="box"><div class="val">' + bonf + '</div><div class="lbl">Bonferroni</div></div>' +
+      '<div class="box"><div class="val">' + bhCount + '</div><div class="lbl">BH FDR 5%</div></div>';
+
+    const tbody = document.querySelector('#multi-table tbody');
+    tbody.innerHTML = '';
+    pvals.forEach((p, i) => {
+      const r = p < 0.05;
+      const b = p < bonfAlpha;
+      const bhR = bhReject[i];
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>M' + (i + 1) + '</td><td>' + p.toFixed(4) + '</td>' +
+        '<td>' + (r ? '<span style="color:var(--danger)">Sig</span>' : '—') + '</td>' +
+        '<td>' + (b ? '<span style="color:var(--success)">Sig</span>' : '—') + '</td>' +
+        '<td>' + (bhR ? '<span style="color:var(--warn)">Sig</span>' : '—') + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    const canvas = document.getElementById('multi-canvas');
+    const pad = { l: 44, r: 12, t: 16, b: 52 };
+    const { ctx, w, h } = setupHiDPICanvas(canvas);
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, w, h);
+    const x0 = pad.l;
+    const x1 = w - pad.r;
+    const y0 = h - pad.b;
+    const y1 = pad.t;
+    const bw = (x1 - x0) / 20;
+    drawAxes(ctx, w, h, pad, 'Rank of p-value (smallest → largest)', 'p-value');
+
+    const ranked = pvals.map((p, i) => ({ p, i })).sort((a, b) => a.p - b.p);
+
+    for (let r = 0; r < 20; r++) {
+      const p = ranked[r].p;
+      const orig = ranked[r].i + 1;
+      const col = p < 0.05 ? '#f87171' : '#6366f1';
+      const ph = (y0 - y1) * Math.min(1, p);
+      ctx.fillStyle = col;
+      ctx.fillRect(x0 + r * bw + 2, y0 - ph, bw - 4, ph);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '9px Inter, sans-serif';
+      ctx.save();
+      ctx.translate(x0 + r * bw + bw / 2, y0 + 10);
+      ctx.rotate(-Math.PI / 4);
+      ctx.fillText('M' + orig, 0, 0);
+      ctx.restore();
+    }
+
+    const y05 = y0 - (y0 - y1) * 0.05;
+    const yBonf = y0 - (y0 - y1) * (0.05 / 20);
+    ctx.strokeStyle = '#a78bfa';
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x0, yBonf);
+    ctx.lineTo(x1, yBonf);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = '#fbbf24';
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x0, y05);
+    ctx.lineTo(x1, y05);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = 'rgba(52,211,153,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let r = 1; r <= 20; r++) {
+      const thr = (0.05 * r) / 20;
+      const xL = x0 + (r - 1) * bw;
+      const xR = x0 + r * bw;
+      const yT = y0 - (y0 - y1) * Math.min(1, thr);
+      if (r === 1) ctx.moveTo(xL, yT);
+      else ctx.lineTo(xL, yT);
+      ctx.lineTo(xR, yT);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillText('α=0.05 (raw)', x1 - 78, y05 - 4);
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('Bonferroni α/20', x0, yBonf - 4);
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('BH: reject ranks where p_(i) ≤ (i/20)·5%', x0, h - 12);
+  }
+
+  document.getElementById('multi-run').addEventListener('click', runMulti);
+  document.getElementById('multi-rerun').addEventListener('click', runMulti);
+
+  // Initial draws
+  runPowerCalc();
+  runSRM();
+  runMulti();
+})();
+  </script>
+</body>
+</html>
