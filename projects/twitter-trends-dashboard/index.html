@@ -4,90 +4,70 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Twitter/X Trends &amp; Sentiment Dashboard</title>
-<meta name="description" content="Interactive analysis of Twitter trends, sentiment, and user behavior across 2016-2025.">
+<meta name="description" content="Interactive analysis of Twitter trends, sentiment, and user behavior 2021-2025.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--tx:#f1f5f9;--tx2:#94a3b8;--acc:#6366f1;--acc2:#818cf8;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--cyan:#06b6d4;--pink:#ec4899;--radius:12px;--shadow:0 4px 20px rgba(0,0,0,.3)}
+:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--tx:#f1f5f9;--tx2:#94a3b8;--acc:#6366f1;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--cyan:#06b6d4;--pink:#ec4899;--radius:12px}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;overflow-x:hidden}
-a{color:var(--acc2);text-decoration:none}
-a:hover{color:var(--acc)}
-
+a{color:#818cf8;text-decoration:none}a:hover{color:#6366f1}
 .back{position:fixed;top:20px;left:20px;z-index:100;font-size:.85rem;font-weight:600;color:var(--tx2);display:flex;align-items:center;gap:6px;transition:.2s}
 .back:hover{color:var(--tx)}
-
 .hero{text-align:center;padding:5rem 2rem 3rem;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 500px 300px at 50% 40%,rgba(99,102,241,.15),transparent);pointer-events:none}
 .hero h1{font-size:clamp(2rem,4.5vw,3.2rem);font-weight:800;letter-spacing:-.03em;margin-bottom:.5rem}
-.hero h1 span{background:linear-gradient(135deg,var(--acc),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero h1 span{background:linear-gradient(135deg,#6366f1,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero p{color:var(--tx2);font-size:1.1rem;max-width:600px;margin:0 auto}
 .hero .meta{margin-top:1rem;font-size:.8rem;color:var(--tx2);display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap}
-.hero .meta span{display:flex;align-items:center;gap:.35rem}
-
 .wrap{max-width:1200px;margin:0 auto;padding:0 1.5rem 4rem}
-
 .filters{display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;align-items:center}
 .filters label{font-size:.8rem;color:var(--tx2);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
 .filters select{background:var(--bg2);border:1px solid var(--bg3);color:var(--tx);padding:.5rem .75rem;border-radius:8px;font-family:inherit;font-size:.9rem;cursor:pointer;outline:none}
 .filters select:focus{border-color:var(--acc)}
-
 .grid{display:grid;gap:1.5rem;margin-bottom:2rem}
 .grid-2{grid-template-columns:1fr 1fr}
 .grid-3{grid-template-columns:1fr 1fr 1fr}
 .grid-4{grid-template-columns:repeat(4,1fr)}
-
 .card{background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--radius);padding:1.5rem;transition:.2s}
 .card:hover{border-color:var(--acc);box-shadow:0 0 20px rgba(99,102,241,.1)}
-.card h3{font-size:.8rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;font-weight:600}
+.card h3{font-size:.75rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;font-weight:600}
 .card .big{font-size:2.2rem;font-weight:800;line-height:1.1}
 .card .sub{font-size:.8rem;color:var(--tx2);margin-top:.25rem}
-.card .delta{font-size:.75rem;font-weight:600;margin-top:.35rem;display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:100px}
-.delta.up{color:var(--green);background:rgba(34,197,94,.1)}
-.delta.down{color:var(--red);background:rgba(239,68,68,.1)}
-
 .chart-card{background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--radius);padding:1.5rem}
-.chart-card h3{font-size:.85rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;font-weight:600}
-.chart-card canvas{width:100%!important;height:auto!important}
-
-.sentiment-bar{display:flex;height:32px;border-radius:8px;overflow:hidden;margin-top:.5rem}
+.chart-card h3{font-size:.8rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;font-weight:600}
+.sentiment-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin-top:.4rem}
 .sentiment-bar div{display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;transition:width .6s ease}
-
 .tag-cloud{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;padding:1rem 0}
 .tag-cloud span{padding:.35rem .85rem;border-radius:100px;font-weight:600;cursor:default;transition:.2s;border:1px solid transparent}
-.tag-cloud span:hover{transform:scale(1.1);border-color:var(--acc)}
-
+.tag-cloud span:hover{transform:scale(1.1);border-color:#6366f1}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:.9rem}
 th{text-align:left;padding:.75rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--tx2);border-bottom:1px solid var(--bg3);cursor:pointer;user-select:none}
 th:hover{color:var(--tx)}
 td{padding:.75rem;border-bottom:1px solid rgba(51,65,85,.4)}
 .pill{display:inline-block;padding:2px 10px;border-radius:100px;font-size:.75rem;font-weight:600}
-.pill-pos{background:rgba(34,197,94,.15);color:var(--green)}
-.pill-neg{background:rgba(239,68,68,.15);color:var(--red)}
-.pill-neu{background:rgba(245,158,11,.15);color:var(--amber)}
-
+.pill-pos{background:rgba(34,197,94,.15);color:#22c55e}
+.pill-neg{background:rgba(239,68,68,.15);color:#ef4444}
+.pill-neu{background:rgba(245,158,11,.15);color:#f59e0b}
 .insight-box{background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(6,182,212,.08));border:1px solid rgba(99,102,241,.2);border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem}
-.insight-box h3{font-size:.9rem;color:var(--acc2);margin-bottom:.5rem;font-weight:700}
+.insight-box h3{font-size:.9rem;color:#818cf8;margin-bottom:.5rem;font-weight:700}
 .insight-box p{color:var(--tx2);font-size:.95rem}
 .insight-box strong{color:var(--tx)}
-
 .section-title{font-size:1.3rem;font-weight:800;margin:2.5rem 0 1rem;letter-spacing:-.02em}
-
 .seg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
 .seg-card{background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--radius);padding:1.25rem;text-align:center;transition:.2s}
-.seg-card:hover{border-color:var(--acc)}
+.seg-card:hover{border-color:#6366f1}
 .seg-card .emoji{font-size:2.2rem;margin-bottom:.5rem}
 .seg-card .seg-name{font-weight:700;font-size:1rem;margin-bottom:.25rem}
 .seg-card .seg-desc{font-size:.8rem;color:var(--tx2);margin-bottom:.75rem}
 .seg-card .seg-stats{display:flex;justify-content:center;gap:1rem;font-size:.75rem;color:var(--tx2)}
 .seg-card .seg-stats strong{color:var(--tx);display:block;font-size:1rem}
-
+.donut-row{display:flex;gap:2rem;align-items:center;justify-content:center;flex-wrap:wrap;padding:1rem 0}
+.donut-legend{display:flex;flex-direction:column;gap:.5rem}
+.donut-legend-item{display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--tx2)}
+.donut-legend-item .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .footer{text-align:center;padding:3rem 2rem;border-top:1px solid var(--bg3);font-size:.85rem;color:var(--tx2)}
-
-@media(max-width:768px){
-  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
-  .filters{flex-direction:column;align-items:stretch}
-}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.filters{flex-direction:column;align-items:stretch}}
 </style>
 </head>
 <body>
@@ -96,10 +76,10 @@ td{padding:.75rem;border-bottom:1px solid rgba(51,65,85,.4)}
 
 <section class="hero">
   <h1>Twitter/X <span>Trends &amp; Sentiment</span></h1>
-  <p>Exploring what the world talked about, how they felt, and who was saying it — across 10 years of tweets.</p>
+  <p>Exploring what the world talked about, how they felt, and who was saying it — 5 years of tweets analyzed.</p>
   <div class="meta">
-    <span>&#128202; 2.4M tweets analyzed</span>
-    <span>&#128197; 2016 &ndash; 2025</span>
+    <span>&#128202; 1.8M tweets analyzed</span>
+    <span>&#128197; 2021 &ndash; 2025</span>
     <span>&#127758; 45 countries</span>
     <span>&#129302; NLP sentiment scoring</span>
   </div>
@@ -107,677 +87,574 @@ td{padding:.75rem;border-bottom:1px solid rgba(51,65,85,.4)}
 
 <div class="wrap">
 
-  <!-- FILTERS -->
   <div class="filters">
     <div>
       <label>Year</label><br>
-      <select id="yearFilter" onchange="updateDashboard()">
-        <option value="all">All Years</option>
-      </select>
+      <select id="yearFilter" onchange="updateAll()"><option value="all">All Years</option></select>
     </div>
     <div>
       <label>Topic</label><br>
-      <select id="topicFilter" onchange="updateDashboard()">
-        <option value="all">All Topics</option>
-      </select>
+      <select id="topicFilter" onchange="updateAll()"><option value="all">All Topics</option></select>
     </div>
   </div>
 
-  <!-- KPI ROW -->
   <div class="grid grid-4" id="kpiRow"></div>
 
-  <!-- INSIGHT -->
   <div class="insight-box" id="insightBox"></div>
 
-  <!-- TREND + SENTIMENT ROW -->
   <div class="grid grid-2">
-    <div class="chart-card">
-      <h3>Tweet Volume Over Time</h3>
-      <canvas id="volumeChart" height="220"></canvas>
-    </div>
-    <div class="chart-card">
-      <h3>Sentiment Distribution</h3>
-      <canvas id="sentimentChart" height="220"></canvas>
-    </div>
+    <div class="chart-card"><h3>Tweet Volume Over Time</h3><canvas id="cVolume"></canvas></div>
+    <div class="chart-card"><h3>Sentiment Breakdown by Year</h3><canvas id="cSentYear"></canvas></div>
   </div>
 
-  <!-- TRENDING TOPICS -->
   <h2 class="section-title">Trending Topics</h2>
-  <div class="chart-card">
-    <h3>Most Discussed Topics by Year (hover to explore)</h3>
-    <canvas id="topicsChart" height="280"></canvas>
+  <div class="chart-card"><h3>Topic Popularity &mdash; 2021 to 2025</h3><canvas id="cTopics"></canvas></div>
+
+  <div class="grid grid-2" style="margin-top:1.5rem">
+    <div class="chart-card">
+      <h3>Topic Cloud &mdash; Sized by Volume, Colored by Sentiment</h3>
+      <div class="tag-cloud" id="tagCloud"></div>
+      <p style="font-size:.75rem;color:var(--tx2);text-align:center;margin-top:.5rem">
+        <span style="color:#22c55e">&#9679;</span> Positive &nbsp;
+        <span style="color:#f59e0b">&#9679;</span> Neutral &nbsp;
+        <span style="color:#ef4444">&#9679;</span> Negative
+      </p>
+    </div>
+    <div class="chart-card">
+      <h3>Sentiment Score by Topic</h3>
+      <canvas id="cPolarity"></canvas>
+    </div>
   </div>
 
-  <!-- TOPIC TAG CLOUD -->
-  <div class="chart-card" style="margin-top:1.5rem">
-    <h3>Topic Cloud &mdash; Sized by Volume, Colored by Sentiment</h3>
-    <div class="tag-cloud" id="tagCloud"></div>
-    <p style="font-size:.75rem;color:var(--tx2);text-align:center;margin-top:.5rem">
-      <span style="color:var(--green)">&#9679;</span> Positive &nbsp;
-      <span style="color:var(--amber)">&#9679;</span> Neutral &nbsp;
-      <span style="color:var(--red)">&#9679;</span> Negative
-    </p>
-  </div>
-
-  <!-- SENTIMENT DEEP DIVE -->
   <h2 class="section-title">Sentiment Deep Dive</h2>
   <div class="grid grid-2">
     <div class="chart-card">
-      <h3>Sentiment by Topic</h3>
-      <div id="sentimentBars"></div>
+      <h3>Positive / Neutral / Negative Mix</h3>
+      <div id="sentBars"></div>
     </div>
     <div class="chart-card">
-      <h3>Most Positive vs Most Negative Topics</h3>
-      <canvas id="polarityChart" height="260"></canvas>
+      <h3>Overall Sentiment Split</h3>
+      <div class="donut-row">
+        <canvas id="cDonut" width="200" height="200"></canvas>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
     </div>
   </div>
 
-  <!-- TOP TWEETS TABLE -->
-  <h2 class="section-title">Sample Viral Tweets</h2>
+  <h2 class="section-title">Viral Tweets</h2>
   <div class="chart-card">
     <div class="table-wrap">
-      <table id="tweetsTable">
-        <thead>
-          <tr>
-            <th onclick="sortTable(0)">Topic</th>
-            <th onclick="sortTable(1)">Tweet</th>
-            <th onclick="sortTable(2)">Likes</th>
-            <th onclick="sortTable(3)">Retweets</th>
-            <th onclick="sortTable(4)">Sentiment</th>
-            <th onclick="sortTable(5)">Year</th>
-          </tr>
-        </thead>
-        <tbody id="tweetsBody"></tbody>
-      </table>
+      <table><thead><tr>
+        <th onclick="sortTbl(0)">Topic</th>
+        <th onclick="sortTbl(1)">Tweet</th>
+        <th onclick="sortTbl(2)">Likes</th>
+        <th onclick="sortTbl(3)">Retweets</th>
+        <th onclick="sortTbl(4)">Sentiment</th>
+        <th onclick="sortTbl(5)">Year</th>
+      </tr></thead><tbody id="tBody"></tbody></table>
     </div>
   </div>
 
-  <!-- USER SEGMENTS -->
   <h2 class="section-title">User Segments</h2>
-  <p style="color:var(--tx2);margin-bottom:1.25rem">Who's tweeting? We clustered users by age, posting frequency, and engagement patterns.</p>
+  <p style="color:var(--tx2);margin-bottom:1.25rem">Users clustered by age, posting frequency, and engagement patterns.</p>
   <div class="seg-grid" id="segGrid"></div>
 
-  <!-- AGE DISTRIBUTION -->
   <div class="grid grid-2" style="margin-top:1.5rem">
-    <div class="chart-card">
-      <h3>Tweets by Age Group</h3>
-      <canvas id="ageChart" height="240"></canvas>
-    </div>
-    <div class="chart-card">
-      <h3>Sentiment by Age Group</h3>
-      <canvas id="ageSentChart" height="240"></canvas>
-    </div>
+    <div class="chart-card"><h3>Tweet Volume by Age Group</h3><canvas id="cAge"></canvas></div>
+    <div class="chart-card"><h3>Average Sentiment by Age Group</h3><canvas id="cAgeSent"></canvas></div>
   </div>
 
-  <!-- ENGAGEMENT HEATMAP -->
   <h2 class="section-title">When Does Twitter Light Up?</h2>
-  <div class="chart-card">
-    <h3>Engagement Heatmap &mdash; Day &times; Hour</h3>
-    <canvas id="heatmap" height="200"></canvas>
-  </div>
+  <div class="chart-card"><h3>Engagement Heatmap &mdash; Day &times; Hour (darker = more active)</h3><canvas id="cHeat"></canvas></div>
 
 </div>
 
 <footer class="footer">
-  Built by <a href="https://www.linkedin.com/in/vaishnavi-gaikwad-23506481/" target="_blank">Vaishnavi Gaikwad</a> &middot;
-  Data simulated for demonstration &middot; 2026
+  Built by <a href="https://www.linkedin.com/in/vaishnavi-gaikwad-23506481/" target="_blank">Vaishnavi Gaikwad</a> &middot; Data simulated for demonstration &middot; 2026
 </footer>
 
 <script>
-const TOPICS = [
-  'Sports','Politics','Tech','Entertainment','Crypto','Climate',
+const C={acc:'#6366f1',acc2:'#818cf8',green:'#22c55e',red:'#ef4444',amber:'#f59e0b',
+  cyan:'#06b6d4',pink:'#ec4899',purple:'#a855f7',teal:'#14b8a6',
+  tx:'#f1f5f9',tx2:'#94a3b8',grid:'rgba(148,163,184,.12)',bg:'#0f172a',bg2:'#1e293b'};
+
+const TOPICS=['Sports','Politics','Tech','Entertainment','Crypto','Climate',
   'Gaming','Music','Health','AI / ML','Elon Musk','Taylor Swift',
-  'World Cup','Elections','COVID','NFTs','Startups','Fashion'
+  'World Cup','Elections','COVID','Startups'];
+const YEARS=[2021,2022,2023,2024,2025];
+const PALETTE=['#6366f1','#06b6d4','#22c55e','#f59e0b','#ec4899','#ef4444','#a855f7','#14b8a6'];
+
+const SEGMENTS=[
+  {name:'Gen Z Creators',emoji:'\u{1F4F1}',age:'16-24',desc:'High-frequency, meme-heavy, short-form content',pct:34,sent:0.12,top:'Entertainment'},
+  {name:'Millennial Commentators',emoji:'\u{1F4AC}',age:'25-34',desc:'News-reactive, opinion-driven, moderate engagement',pct:28,sent:0.05,top:'Politics'},
+  {name:'Tech Enthusiasts',emoji:'\u{1F4BB}',age:'25-40',desc:'Deep threads, high retweet ratio, follow AI & crypto',pct:18,sent:0.18,top:'AI / ML'},
+  {name:'Sports Fanatics',emoji:'\u26BD',age:'18-45',desc:'Spike during events, highly emotional, tribal loyalty',pct:12,sent:0.08,top:'Sports'},
+  {name:'Silent Scrollers',emoji:'\u{1F440}',age:'35-55',desc:'Rarely post, high consumption, like-heavy',pct:8,sent:0.02,top:'Health'}
 ];
 
-const YEARS = [2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
-
-const SEGMENTS = [
-  {name:'Gen Z Creators',emoji:'\u{1F4F1}',age:'16-24',desc:'High frequency posters, meme-heavy, short attention spans',pctTweets:34,avgSentiment:.12,topTopic:'Entertainment'},
-  {name:'Millennial Commentators',emoji:'\u{1F4AC}',age:'25-34',desc:'News-reactive, opinion-driven, moderate engagement',pctTweets:28,avgSentiment:.05,topTopic:'Politics'},
-  {name:'Tech Enthusiasts',emoji:'\u{1F4BB}',age:'25-40',desc:'Deep threads, high retweet ratio, follow AI/crypto',pctTweets:18,avgSentiment:.18,topTopic:'AI / ML'},
-  {name:'Sports Fanatics',emoji:'\u{26BD}',age:'18-45',desc:'Spike during events, highly emotional, tribal',pctTweets:12,avgSentiment:.08,topTopic:'Sports'},
-  {name:'Silent Scrollers',emoji:'\u{1F440}',age:'35-55',desc:'Rarely post, high consumption, like-heavy',pctTweets:8,avgSentiment:.02,topTopic:'Health'}
+const AGES=[
+  {label:'16-24',pct:.30,sent:.11},
+  {label:'25-34',pct:.33,sent:.06},
+  {label:'35-44',pct:.21,sent:.03},
+  {label:'45-54',pct:.11,sent:-.02},
+  {label:'55+',pct:.05,sent:-.05}
 ];
 
-function seededRand(seed){let s=seed;return()=>{s=Math.sin(s)*10000;return s-Math.floor(s)}}
+function seeded(s){return()=>{s=Math.sin(s)*10000;return s-Math.floor(s)}}
+const rng=seeded(42);
 
-function genData(){
-  const rng=seededRand(42);
-  const data={byYear:{},byTopic:{},byYearTopic:{},tweets:[],byAge:{},heatmap:[]};
+function buildData(){
+  const d={yt:{},topics:{},years:{}};
+  YEARS.forEach(y=>{d.years[y]={vol:0,pos:0,neg:0,neu:0,likes:0,rts:0}});
+  TOPICS.forEach(tp=>{d.topics[tp]={vol:0,pos:0,neg:0,neu:0}});
 
   YEARS.forEach(y=>{
-    data.byYear[y]={volume:0,positive:0,negative:0,neutral:0,likes:0,retweets:0};
     TOPICS.forEach(t=>{
-      const key=y+'-'+t;
-      let base=8000+rng()*12000;
-      if(t==='COVID'&&(y===2020||y===2021))base*=4;
-      if(t==='Crypto'&&(y===2021||y===2022))base*=3;
-      if(t==='AI / ML'&&y>=2023)base*=3.5;
+      let base=6000+rng()*10000;
+      if(t==='COVID'&&y===2021)base*=3.5;
+      if(t==='COVID'&&y>=2023)base*=.4;
+      if(t==='Crypto'&&(y===2021||y===2022))base*=2.8;
+      if(t==='Crypto'&&y>=2023)base*=.5;
+      if(t==='AI / ML'&&y>=2023)base*=3.2;
+      if(t==='AI / ML'&&y===2025)base*=4;
       if(t==='Taylor Swift'&&y>=2023)base*=2.5;
-      if(t==='Elon Musk'&&y>=2022)base*=2.8;
-      if(t==='World Cup'&&(y===2018||y===2022))base*=5;
-      if(t==='Elections'&&(y===2016||y===2020||y===2024))base*=4;
-      if(t==='NFTs'&&(y===2021||y===2022))base*=3;
-      if(t==='NFTs'&&y>=2023)base*=.3;
-      if(t==='Climate'&&y>=2023)base*=1.8;
+      if(t==='Elon Musk'&&y>=2022)base*=2.5;
+      if(t==='World Cup'&&y===2022)base*=5;
+      if(t==='Elections'&&y===2024)base*=4;
+      if(t==='Climate'&&y>=2024)base*=1.8;
+      if(t==='Gaming'&&y>=2023)base*=1.5;
       const vol=Math.round(base);
 
-      let posBias=.35+rng()*.15;
-      if(t==='Sports'||t==='Music'||t==='Taylor Swift')posBias+=.15;
-      if(t==='Politics'||t==='Climate')posBias-=.12;
-      if(t==='COVID')posBias-=.18;
-      if(t==='Crypto'&&y>=2023)posBias-=.1;
-      const pos=Math.round(vol*posBias);
-      const neg=Math.round(vol*(.2+rng()*.15));
-      const neu=vol-pos-neg;
-      const likes=Math.round(vol*(3+rng()*8));
-      const rts=Math.round(vol*(1+rng()*4));
+      let pb=.33+rng()*.14;
+      if(t==='Sports'||t==='Music'||t==='Taylor Swift')pb+=.14;
+      if(t==='Politics'||t==='Climate')pb-=.1;
+      if(t==='COVID')pb-=.15;
+      if(t==='Crypto'&&y>=2023)pb-=.1;
+      if(t==='AI / ML')pb+=.08;
+      const pos=Math.round(vol*Math.max(.1,Math.min(.65,pb)));
+      const neg=Math.round(vol*(.18+rng()*.14));
+      const neu=Math.max(0,vol-pos-neg);
 
-      data.byYearTopic[key]={volume:vol,positive:pos,negative:neg,neutral:neu,likes,retweets:rts};
-      data.byYear[y].volume+=vol;
-      data.byYear[y].positive+=pos;
-      data.byYear[y].negative+=neg;
-      data.byYear[y].neutral+=neu;
-      data.byYear[y].likes+=likes;
-      data.byYear[y].retweets+=rts;
-
-      if(!data.byTopic[t])data.byTopic[t]={volume:0,positive:0,negative:0,neutral:0};
-      data.byTopic[t].volume+=vol;
-      data.byTopic[t].positive+=pos;
-      data.byTopic[t].negative+=neg;
-      data.byTopic[t].neutral+=neu;
+      const key=y+'-'+t;
+      d.yt[key]={vol,pos,neg,neu};
+      d.years[y].vol+=vol;d.years[y].pos+=pos;d.years[y].neg+=neg;d.years[y].neu+=neu;
+      d.topics[t].vol+=vol;d.topics[t].pos+=pos;d.topics[t].neg+=neg;d.topics[t].neu+=neu;
     });
   });
 
-  const sampleTweets=[
+  d.tweets=[
     {topic:'Sports',tweet:'LeBron just dropped 50 in a playoff elimination game. GOAT debate is OVER.',likes:342000,rts:89000,sent:'positive',yr:2023},
     {topic:'Sports',tweet:'VAR has completely ruined the beautiful game. Nobody celebrates goals anymore.',likes:218000,rts:67000,sent:'negative',yr:2022},
     {topic:'AI / ML',tweet:'ChatGPT just passed the bar exam. We are not ready for what\'s coming.',likes:890000,rts:245000,sent:'neutral',yr:2023},
     {topic:'Crypto',tweet:'I put my life savings into Bitcoin at 69k. AMA.',likes:156000,rts:43000,sent:'negative',yr:2022},
     {topic:'Taylor Swift',tweet:'The Eras Tour is the greatest concert experience in human history. Not debatable.',likes:1200000,rts:340000,sent:'positive',yr:2023},
     {topic:'Elon Musk',tweet:'He really renamed it X. This man bought a $44B brand and threw it in the trash.',likes:780000,rts:210000,sent:'negative',yr:2023},
-    {topic:'COVID',tweet:'Day 47 of lockdown. I\'ve taught my cat to fetch. We\'ve both lost it.',likes:2100000,rts:560000,sent:'positive',yr:2020},
+    {topic:'COVID',tweet:'Day 47 of lockdown. I\'ve taught my cat to fetch. We\'ve both lost it.',likes:2100000,rts:560000,sent:'positive',yr:2021},
     {topic:'Politics',tweet:'Regardless of who you voted for, we can all agree the debates were peak reality TV.',likes:445000,rts:120000,sent:'neutral',yr:2024},
     {topic:'Climate',tweet:'My city just hit 125\u00B0F. But sure, let\'s keep debating if climate change is real.',likes:670000,rts:190000,sent:'negative',yr:2024},
     {topic:'Gaming',tweet:'GTA 6 trailer dropped and the internet actually broke. Every other game can wait.',likes:1500000,rts:400000,sent:'positive',yr:2023},
-    {topic:'Tech',tweet:'Apple just killed the headphone jack, the charger, and now the buttons. What\'s next, the screen?',likes:390000,rts:110000,sent:'negative',yr:2024},
+    {topic:'Tech',tweet:'Apple killed the headphone jack, the charger, and now the buttons. What\'s next?',likes:390000,rts:110000,sent:'negative',yr:2024},
     {topic:'Music',tweet:'Beyonc\u00E9 just performed for 3 hours straight. My legs hurt from watching.',likes:920000,rts:280000,sent:'positive',yr:2023},
     {topic:'World Cup',tweet:'Messi finally lifting that trophy. Football is complete.',likes:3200000,rts:870000,sent:'positive',yr:2022},
-    {topic:'NFTs',tweet:'Just sold a screenshot of my NFT as an NFT. We\'ve gone full circle.',likes:210000,rts:65000,sent:'neutral',yr:2021},
-    {topic:'Elections',tweet:'The fact that election night is basically the Super Bowl for data nerds says everything.',likes:290000,rts:78000,sent:'positive',yr:2024},
+    {topic:'Elections',tweet:'Election night is basically the Super Bowl for data nerds.',likes:290000,rts:78000,sent:'positive',yr:2024},
     {topic:'Health',tweet:'Sleep is the most underrated performance enhancer. Not coffee. Not supplements. Sleep.',likes:510000,rts:145000,sent:'positive',yr:2025},
     {topic:'Startups',tweet:'My startup failed after 18 months. Best MBA I never paid for.',likes:680000,rts:190000,sent:'positive',yr:2024},
-    {topic:'Fashion',tweet:'Quiet luxury is just rich people dressing like NPCs and calling it taste.',likes:340000,rts:95000,sent:'neutral',yr:2023},
     {topic:'Crypto',tweet:'Bitcoin at 100k. Everyone who laughed is real quiet right now.',likes:890000,rts:250000,sent:'positive',yr:2024},
-    {topic:'AI / ML',tweet:'I asked AI to write my resignation letter and it was better than anything I could\'ve written. Poetic.',likes:720000,rts:200000,sent:'positive',yr:2024},
+    {topic:'AI / ML',tweet:'I asked AI to write my resignation letter and it was better than anything I could\'ve written.',likes:720000,rts:200000,sent:'positive',yr:2024},
     {topic:'Sports',tweet:'March Madness bracket busted in 4 hours. See you all next year.',likes:185000,rts:52000,sent:'negative',yr:2025},
-    {topic:'Elon Musk',tweet:'Say what you want but SpaceX catching a rocket with chopsticks is genuinely insane engineering.',likes:1100000,rts:310000,sent:'positive',yr:2024},
+    {topic:'Elon Musk',tweet:'SpaceX catching a rocket with chopsticks is genuinely insane engineering.',likes:1100000,rts:310000,sent:'positive',yr:2024},
     {topic:'Entertainment',tweet:'That season finale broke me. I\'m not okay and I don\'t want to talk about it.',likes:430000,rts:115000,sent:'negative',yr:2025},
     {topic:'Climate',tweet:'We planted 10 million trees this year. Small wins, but wins.',likes:780000,rts:230000,sent:'positive',yr:2025}
   ];
-  data.tweets=sampleTweets;
 
-  const ageGroups=['16-24','25-34','35-44','45-54','55+'];
-  const agePcts=[.28,.32,.22,.12,.06];
-  const ageSent=[.11,.06,.04,-.02,-.05];
-  ageGroups.forEach((a,i)=>{
-    data.byAge[a]={pct:agePcts[i],sentiment:ageSent[i],volume:Math.round(2400000*agePcts[i])};
-  });
-
+  d.heatmap=[];
   const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  days.forEach((d,di)=>{
+  days.forEach((day,di)=>{
     for(let h=0;h<24;h++){
-      let val=20+rng()*30;
-      if(h>=8&&h<=10)val+=30;
-      if(h>=12&&h<=14)val+=20;
-      if(h>=19&&h<=23)val+=40;
-      if(di>=5)val+=15;
-      if(h>=1&&h<=6)val-=15;
-      data.heatmap.push({day:d,hour:h,value:Math.max(5,Math.round(val))});
+      let v=15+rng()*25;
+      if(h>=8&&h<=10)v+=25;
+      if(h>=12&&h<=14)v+=18;
+      if(h>=19&&h<=23)v+=38;
+      if(di>=5)v+=12;
+      if(h>=1&&h<=6)v-=12;
+      d.heatmap.push({day,di,hour:h,value:Math.max(5,Math.round(v))});
     }
   });
-  return data;
+  return d;
 }
 
-const DATA=genData();
-let charts={};
+const DATA=buildData();
 
-function populateFilters(){
-  const ys=document.getElementById('yearFilter');
+function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return ''+n}
+
+function initFilters(){
+  const ys=document.getElementById('yearFilter'),ts=document.getElementById('topicFilter');
   YEARS.forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;ys.appendChild(o)});
-  const ts=document.getElementById('topicFilter');
-  TOPICS.sort().forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;ts.appendChild(o)});
+  TOPICS.slice().sort().forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;ts.appendChild(o)});
 }
 
-function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n.toString()}
-
-function getFiltered(){
-  const y=document.getElementById('yearFilter').value;
-  const t=document.getElementById('topicFilter').value;
-  let volume=0,pos=0,neg=0,neu=0,likes=0,rts=0;
-  const years=y==='all'?YEARS:[parseInt(y)];
-  const topics=t==='all'?TOPICS:[t];
-  years.forEach(yr=>{
-    topics.forEach(tp=>{
-      const d=DATA.byYearTopic[yr+'-'+tp];
-      if(d){volume+=d.volume;pos+=d.positive;neg+=d.negative;neu+=d.neutral;likes+=d.likes;rts+=d.retweets;}
-    });
-  });
-  return{volume,pos,neg,neu,likes,rts,years,topics};
+function getF(){
+  const yv=document.getElementById('yearFilter').value;
+  const tv=document.getElementById('topicFilter').value;
+  const yrs=yv==='all'?YEARS:[+yv];
+  const tps=tv==='all'?TOPICS:[tv];
+  let vol=0,pos=0,neg=0,neu=0,likes=0,rts=0;
+  yrs.forEach(y=>tps.forEach(t=>{const d=DATA.yt[y+'-'+t];if(d){vol+=d.vol;pos+=d.pos;neg+=d.neg;neu+=d.neu;}}));
+  return{vol,pos,neg,neu,yrs,tps};
 }
 
-function renderKPIs(d){
-  const avgSent=d.volume>0?((d.pos-d.neg)/d.volume).toFixed(3):'0';
-  const engRate=d.volume>0?((d.likes+d.rts)/d.volume).toFixed(1):'0';
-  const sentLabel=avgSent>0.05?'Positive':avgSent<-0.05?'Negative':'Neutral';
-  const sentColor=avgSent>0.05?'var(--green)':avgSent<-0.05?'var(--red)':'var(--amber)';
+function setupCanvas(id,h){
+  const cv=document.getElementById(id);
+  const dpr=window.devicePixelRatio||1;
+  const w=cv.parentElement.clientWidth-48;
+  cv.style.width=w+'px';cv.style.height=h+'px';
+  cv.width=w*dpr;cv.height=h*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.scale(dpr,dpr);
+  return{ctx,w,h};
+}
+
+function drawGridH(ctx,pad,w,h,max,steps){
+  for(let i=0;i<=steps;i++){
+    const y=pad.t+(h-pad.t-pad.b)*(1-i/steps);
+    ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+    ctx.fillStyle=C.tx2;ctx.font='10px Inter';ctx.textAlign='right';
+    ctx.fillText(fmt(Math.round(max*i/steps)),pad.l-8,y+4);
+  }
+}
+
+// ===== KPIs =====
+function renderKPIs(f){
+  const s=f.vol>0?(f.pos-f.neg)/f.vol:0;
+  const sLbl=s>0.05?'Positive':s<-0.05?'Negative':'Neutral';
+  const sClr=s>0.05?C.green:s<-0.05?C.red:C.amber;
   document.getElementById('kpiRow').innerHTML=`
-    <div class="card"><h3>Total Tweets</h3><div class="big">${fmt(d.volume)}</div><div class="sub">analyzed in dataset</div></div>
-    <div class="card"><h3>Avg Sentiment</h3><div class="big" style="color:${sentColor}">${avgSent>0?'+':''}${avgSent}</div><div class="sub">${sentLabel} overall tone</div></div>
-    <div class="card"><h3>Total Engagement</h3><div class="big">${fmt(d.likes+d.rts)}</div><div class="sub">${fmt(d.likes)} likes + ${fmt(d.rts)} RTs</div></div>
-    <div class="card"><h3>Engagement Rate</h3><div class="big">${engRate}x</div><div class="sub">interactions per tweet</div></div>
-  `;
+    <div class="card"><h3>Total Tweets</h3><div class="big">${fmt(f.vol)}</div><div class="sub">across ${f.tps.length} topics</div></div>
+    <div class="card"><h3>Avg Sentiment</h3><div class="big" style="color:${sClr}">${s>0?'+':''}${s.toFixed(3)}</div><div class="sub">${sLbl} overall</div></div>
+    <div class="card"><h3>Positive Rate</h3><div class="big" style="color:${C.green}">${f.vol>0?Math.round(f.pos/f.vol*100):0}%</div><div class="sub">${fmt(f.pos)} positive tweets</div></div>
+    <div class="card"><h3>Negative Rate</h3><div class="big" style="color:${C.red}">${f.vol>0?Math.round(f.neg/f.vol*100):0}%</div><div class="sub">${fmt(f.neg)} negative tweets</div></div>`;
 }
 
-function renderInsight(d){
-  const insights=[
-    `<strong>COVID-19</strong> dominated 2020-2021 with 4x normal tweet volume, yet had the <strong>most negative sentiment</strong> of any topic — scoring -0.15 on average.`,
-    `<strong>AI / ML</strong> tweets exploded 3.5x starting in 2023 and carry the <strong>most positive sentiment</strong> among tech topics. The hype is real — and measurable.`,
-    `<strong>Sports tweets</strong> are the most emotionally volatile — sentiment swings from +0.4 during wins to -0.3 during losses, a wider range than any other category.`,
-    `<strong>Gen Z (16-24)</strong> produces 34% of all tweets but only 28% of engagement. <strong>Millennials</strong> get more likes per tweet despite posting less.`,
-    `<strong>World Cup years</strong> (2018, 2022) see 5x tweet spikes in Sports. Messi lifting the trophy in 2022 generated the single highest-engagement tweet in the dataset.`,
-    `<strong>Crypto sentiment</strong> flipped negative in 2023 after being overwhelmingly positive in 2021. NFT mentions dropped 70% year-over-year.`,
-    `<strong>Sunday 8-11 PM</strong> is peak Twitter — engagement is 3x higher than weekday mornings. People tweet most when they should be sleeping.`
+// ===== INSIGHT =====
+function renderInsight(){
+  const tips=[
+    '<strong>AI / ML</strong> tweets grew 4x from 2021 to 2025, overtaking every other tech topic. Sentiment stayed positive through the hype cycle.',
+    '<strong>COVID</strong> dominated 2021 with 3.5x normal volume and the most negative sentiment of any topic at -0.15 average.',
+    '<strong>Crypto</strong> sentiment flipped negative in 2023 after being overwhelmingly positive in 2021. NFT-adjacent chatter dropped 70%.',
+    '<strong>World Cup 2022</strong> generated the single highest-engagement tweet in the dataset: Messi lifting the trophy (3.2M likes).',
+    '<strong>Sunday 8-11 PM</strong> is peak Twitter engagement, 3x higher than weekday mornings. People tweet most when they should be sleeping.',
+    '<strong>Gen Z (16-24)</strong> produces 34% of tweets but only 28% of engagement. Millennials get more likes per tweet despite posting less.',
+    '<strong>Sports</strong> tweets have the widest sentiment swing of any category: +0.4 during wins to -0.3 during losses.'
   ];
-  const idx=Math.floor(Math.random()*insights.length);
-  document.getElementById('insightBox').innerHTML=`<h3>&#128161; Did You Know?</h3><p>${insights[idx]}</p>`;
+  const i=Math.floor(Math.random()*tips.length);
+  document.getElementById('insightBox').innerHTML=`<h3>&#128161; Did You Know?</h3><p>${tips[i]}</p>`;
 }
 
-function drawVolumeChart(d){
-  const canvas=document.getElementById('volumeChart');
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width=canvas.parentElement.clientWidth-48;
-  const H=canvas.height=220;
-  ctx.clearRect(0,0,W,H);
+// ===== VOLUME CHART =====
+function drawVolume(f){
+  const{ctx,w,h}=setupCanvas('cVolume',240);
+  const pad={t:25,b:35,l:55,r:20};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const vals=YEARS.map(y=>{let v=0;f.tps.forEach(t=>{const d=DATA.yt[y+'-'+t];if(d)v+=d.vol});return v});
+  const mx=Math.max(...vals)*1.15;
+  drawGridH(ctx,pad,w,h,mx,4);
 
-  const years=YEARS;
-  const vals=years.map(y=>{
-    let v=0;
-    d.topics.forEach(t=>{const dd=DATA.byYearTopic[y+'-'+t];if(dd)v+=dd.volume;});
-    return v;
-  });
-  const max=Math.max(...vals)*1.15;
-  const pad={t:20,b:30,l:50,r:20};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  const pts=vals.map((v,i)=>({x:pad.l+i*(cw/(vals.length-1)),y:pad.t+ch*(1-v/mx)}));
 
-  ctx.strokeStyle='rgba(148,163,184,.15)';
-  ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const y=pad.t+ch*(1-i/4);
-    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
-    ctx.fillStyle='rgba(148,163,184,.5)';ctx.font='11px Inter';ctx.textAlign='right';
-    ctx.fillText(fmt(Math.round(max*i/4)),pad.l-8,y+4);
-  }
+  // area
+  const grad=ctx.createLinearGradient(0,pad.t,0,h-pad.b);
+  grad.addColorStop(0,'rgba(99,102,241,.25)');grad.addColorStop(1,'rgba(99,102,241,.02)');
+  ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.lineTo(pts[pts.length-1].x,h-pad.b);ctx.lineTo(pts[0].x,h-pad.b);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
 
-  const grad=ctx.createLinearGradient(0,pad.t,0,H-pad.b);
-  grad.addColorStop(0,'rgba(99,102,241,.3)');grad.addColorStop(1,'rgba(99,102,241,.02)');
-  ctx.beginPath();
-  vals.forEach((v,i)=>{
-    const x=pad.l+i*(cw/(vals.length-1));
-    const y=pad.t+ch*(1-v/max);
-    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-  });
-  ctx.lineTo(pad.l+(vals.length-1)*(cw/(vals.length-1)),H-pad.b);
-  ctx.lineTo(pad.l,H-pad.b);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  // line
+  ctx.beginPath();ctx.strokeStyle=C.acc;ctx.lineWidth=2.5;ctx.lineJoin='round';
+  pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.stroke();
 
-  ctx.beginPath();ctx.strokeStyle='var(--acc)';ctx.lineWidth=2.5;
-  vals.forEach((v,i)=>{
-    const x=pad.l+i*(cw/(vals.length-1));
-    const y=pad.t+ch*(1-v/max);
-    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-  });
-  ctx.stroke();
-
-  vals.forEach((v,i)=>{
-    const x=pad.l+i*(cw/(vals.length-1));
-    const y=pad.t+ch*(1-v/max);
-    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='var(--acc)';ctx.fill();
-    ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
-    ctx.fillStyle='rgba(148,163,184,.7)';ctx.font='10px Inter';ctx.textAlign='center';
-    ctx.fillText(years[i],x,H-pad.b+16);
+  // dots + labels
+  pts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fillStyle=C.acc;ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+    ctx.fillStyle=C.tx2;ctx.font='11px Inter';ctx.textAlign='center';
+    ctx.fillText(YEARS[i],p.x,h-pad.b+18);
+    ctx.fillStyle=C.tx;ctx.font='bold 11px Inter';
+    ctx.fillText(fmt(vals[i]),p.x,p.y-12);
   });
 }
 
-function drawSentimentChart(d){
-  const canvas=document.getElementById('sentimentChart');
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width=canvas.parentElement.clientWidth-48;
-  const H=canvas.height=220;
-  ctx.clearRect(0,0,W,H);
+// ===== SENTIMENT BY YEAR =====
+function drawSentYear(f){
+  const{ctx,w,h}=setupCanvas('cSentYear',240);
+  const pad={t:30,b:35,l:20,r:20};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const bw=cw/YEARS.length*.55;
 
-  const years=YEARS;
-  const posVals=[],negVals=[],neuVals=[];
-  years.forEach(y=>{
-    let p=0,n=0,ne=0;
-    d.topics.forEach(t=>{const dd=DATA.byYearTopic[y+'-'+t];if(dd){p+=dd.positive;n+=dd.negative;ne+=dd.neutral;}});
-    const tot=p+n+ne||1;
-    posVals.push(p/tot);negVals.push(n/tot);neuVals.push(ne/tot);
-  });
-
-  const pad={t:20,b:30,l:50,r:20};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-  const bw=cw/years.length*.6;
-
-  years.forEach((_,i)=>{
-    const x=pad.l+i*(cw/years.length)+cw/years.length*.2;
-    let cy=pad.t;
-    const segs=[{v:posVals[i],c:'rgba(34,197,94,.7)'},{v:neuVals[i],c:'rgba(245,158,11,.5)'},{v:negVals[i],c:'rgba(239,68,68,.7)'}];
-    segs.forEach(s=>{
-      const h=ch*s.v;
-      ctx.fillStyle=s.c;
-      ctx.beginPath();ctx.roundRect?ctx.roundRect(x,cy,bw,h,2):ctx.rect(x,cy,bw,h);ctx.fill();
-      cy+=h;
-    });
-    ctx.fillStyle='rgba(148,163,184,.7)';ctx.font='10px Inter';ctx.textAlign='center';
-    ctx.fillText(years[i],x+bw/2,H-pad.b+16);
-  });
-
-  const legend=[{c:'rgba(34,197,94,.7)',l:'Positive'},{c:'rgba(245,158,11,.5)',l:'Neutral'},{c:'rgba(239,68,68,.7)',l:'Negative'}];
-  legend.forEach((lg,i)=>{
-    const lx=pad.l+i*90;
-    ctx.fillStyle=lg.c;ctx.fillRect(lx,6,12,12);
-    ctx.fillStyle='rgba(148,163,184,.8)';ctx.font='11px Inter';ctx.textAlign='left';
-    ctx.fillText(lg.l,lx+16,16);
-  });
-}
-
-function drawTopicsChart(){
-  const canvas=document.getElementById('topicsChart');
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width=canvas.parentElement.clientWidth-48;
-  const H=canvas.height=280;
-  ctx.clearRect(0,0,W,H);
-
-  const top8=TOPICS.slice().sort((a,b)=>DATA.byTopic[b].volume-DATA.byTopic[a].volume).slice(0,8);
-  const colors=['#6366f1','#06b6d4','#22c55e','#f59e0b','#ec4899','#ef4444','#8b5cf6','#14b8a6'];
-  const pad={t:30,b:35,l:50,r:120};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-
-  const allVals=[];
-  top8.forEach(t=>{YEARS.forEach(y=>{allVals.push(DATA.byYearTopic[y+'-'+t]?.volume||0)})});
-  const max=Math.max(...allVals)*1.15;
-
-  ctx.strokeStyle='rgba(148,163,184,.1)';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const y=pad.t+ch*(1-i/4);
-    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cw,y);ctx.stroke();
-    ctx.fillStyle='rgba(148,163,184,.5)';ctx.font='10px Inter';ctx.textAlign='right';
-    ctx.fillText(fmt(Math.round(max*i/4)),pad.l-8,y+4);
-  }
-
-  top8.forEach((t,ti)=>{
-    ctx.beginPath();ctx.strokeStyle=colors[ti];ctx.lineWidth=2;ctx.setLineDash([]);
-    YEARS.forEach((y,yi)=>{
-      const v=DATA.byYearTopic[y+'-'+t]?.volume||0;
-      const x=pad.l+yi*(cw/(YEARS.length-1));
-      const yy=pad.t+ch*(1-v/max);
-      if(yi===0)ctx.moveTo(x,yy);else ctx.lineTo(x,yy);
-    });
-    ctx.stroke();
+  // legend
+  [{c:C.green,l:'Positive'},{c:C.amber,l:'Neutral'},{c:C.red,l:'Negative'}].forEach((lg,i)=>{
+    ctx.fillStyle=lg.c;ctx.fillRect(pad.l+i*90,8,12,12);
+    ctx.fillStyle=C.tx2;ctx.font='11px Inter';ctx.textAlign='left';ctx.fillText(lg.l,pad.l+i*90+16,18);
   });
 
   YEARS.forEach((y,i)=>{
-    ctx.fillStyle='rgba(148,163,184,.7)';ctx.font='10px Inter';ctx.textAlign='center';
-    ctx.fillText(y,pad.l+i*(cw/(YEARS.length-1)),H-pad.b+18);
+    let p=0,n=0,ne=0;
+    f.tps.forEach(t=>{const d=DATA.yt[y+'-'+t];if(d){p+=d.pos;n+=d.neg;ne+=d.neu}});
+    const tot=p+n+ne||1;
+    const x=pad.l+i*(cw/YEARS.length)+cw/YEARS.length*.225;
+    let cy=pad.t;
+    [{v:p/tot,c:C.green},{v:ne/tot,c:C.amber},{v:n/tot,c:C.red}].forEach(seg=>{
+      const sh=ch*seg.v;
+      ctx.fillStyle=seg.c;
+      ctx.beginPath();ctx.rect(x,cy,bw,sh);ctx.fill();
+      if(seg.v>.08){ctx.fillStyle='#fff';ctx.font='bold 10px Inter';ctx.textAlign='center';
+        ctx.fillText(Math.round(seg.v*100)+'%',x+bw/2,cy+sh/2+4);}
+      cy+=sh;
+    });
+    ctx.fillStyle=C.tx2;ctx.font='11px Inter';ctx.textAlign='center';
+    ctx.fillText(y,x+bw/2,h-pad.b+18);
   });
+}
+
+// ===== TOPICS CHART =====
+function drawTopics(){
+  const{ctx,w,h}=setupCanvas('cTopics',300);
+  const pad={t:20,b:35,l:55,r:130};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const top8=TOPICS.slice().sort((a,b)=>DATA.topics[b].vol-DATA.topics[a].vol).slice(0,8);
+
+  const allV=[];top8.forEach(t=>YEARS.forEach(y=>{allV.push(DATA.yt[y+'-'+t]?.vol||0)}));
+  const mx=Math.max(...allV)*1.15;
+  drawGridH(ctx,pad,w,h,mx,4);
+
+  top8.forEach((t,ti)=>{
+    ctx.beginPath();ctx.strokeStyle=PALETTE[ti];ctx.lineWidth=2.5;ctx.lineJoin='round';
+    YEARS.forEach((y,yi)=>{
+      const v=DATA.yt[y+'-'+t]?.vol||0;
+      const x=pad.l+yi*(cw/(YEARS.length-1));
+      const yy=pad.t+ch*(1-v/mx);
+      yi===0?ctx.moveTo(x,yy):ctx.lineTo(x,yy);
+    });
+    ctx.stroke();
+    // end dot
+    const lastV=DATA.yt[YEARS[YEARS.length-1]+'-'+t]?.vol||0;
+    const lx=pad.l+(YEARS.length-1)*(cw/(YEARS.length-1));
+    const ly=pad.t+ch*(1-lastV/mx);
+    ctx.beginPath();ctx.arc(lx,ly,3.5,0,Math.PI*2);ctx.fillStyle=PALETTE[ti];ctx.fill();
+  });
+
+  YEARS.forEach((y,i)=>{ctx.fillStyle=C.tx2;ctx.font='11px Inter';ctx.textAlign='center';
+    ctx.fillText(y,pad.l+i*(cw/(YEARS.length-1)),h-pad.b+18)});
 
   top8.forEach((t,i)=>{
-    const ly=pad.t+15+i*20;
-    ctx.fillStyle=colors[i];ctx.fillRect(W-pad.r+15,ly,14,3);
-    ctx.fillStyle='rgba(148,163,184,.8)';ctx.font='11px Inter';ctx.textAlign='left';
-    ctx.fillText(t,W-pad.r+35,ly+5);
+    const ly=pad.t+12+i*22;
+    ctx.fillStyle=PALETTE[i];ctx.beginPath();ctx.arc(w-pad.r+22,ly,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=C.tx2;ctx.font='12px Inter';ctx.textAlign='left';ctx.fillText(t,w-pad.r+32,ly+4);
   });
 }
 
-function renderTagCloud(d){
+// ===== TAG CLOUD =====
+function renderCloud(f){
   const el=document.getElementById('tagCloud');
-  const topics=d.topics.length===1?TOPICS:d.topics;
-  const sorted=topics.slice().sort((a,b)=>DATA.byTopic[b].volume-DATA.byTopic[a].volume);
-  const maxVol=DATA.byTopic[sorted[0]].volume;
+  const tps=f.tps.length===1?TOPICS:f.tps;
+  const sorted=tps.slice().sort((a,b)=>DATA.topics[b].vol-DATA.topics[a].vol);
+  const mxV=DATA.topics[sorted[0]].vol;
   el.innerHTML=sorted.map(t=>{
-    const dd=DATA.byTopic[t];
-    const ratio=dd.volume/maxVol;
-    const size=Math.round(12+ratio*22);
-    const sent=(dd.positive-dd.negative)/dd.volume;
-    const color=sent>0.1?'var(--green)':sent<-0.05?'var(--red)':'var(--amber)';
-    const bg=sent>0.1?'rgba(34,197,94,.1)':sent<-0.05?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)';
-    return `<span style="font-size:${size}px;color:${color};background:${bg}" title="${t}: ${fmt(dd.volume)} tweets, sentiment ${sent>0?'+':''}${sent.toFixed(3)}">${t}</span>`;
+    const d=DATA.topics[t],r=d.vol/mxV,sz=Math.round(13+r*20);
+    const s=(d.pos-d.neg)/d.vol;
+    const clr=s>.1?C.green:s<-.05?C.red:C.amber;
+    const bg=s>.1?'rgba(34,197,94,.1)':s<-.05?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)';
+    return `<span style="font-size:${sz}px;color:${clr};background:${bg}" title="${t}: ${fmt(d.vol)} tweets, sentiment ${s>0?'+':''}${s.toFixed(3)}">${t}</span>`;
   }).join('');
 }
 
-function renderSentimentBars(){
-  const el=document.getElementById('sentimentBars');
-  const sorted=TOPICS.slice().sort((a,b)=>DATA.byTopic[b].volume-DATA.byTopic[a].volume).slice(0,10);
-  el.innerHTML=sorted.map(t=>{
-    const dd=DATA.byTopic[t];
-    const tot=dd.positive+dd.negative+dd.neutral;
-    const pp=Math.round(dd.positive/tot*100);
-    const np=Math.round(dd.negative/tot*100);
-    const nep=100-pp-np;
-    return `<div style="margin-bottom:.85rem"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:.8rem;font-weight:600">${t}</span><span style="font-size:.7rem;color:var(--tx2)">${fmt(tot)}</span></div><div class="sentiment-bar"><div style="width:${pp}%;background:var(--green)">${pp>8?pp+'%':''}</div><div style="width:${nep}%;background:var(--amber)">${nep>8?nep+'%':''}</div><div style="width:${np}%;background:var(--red)">${np>8?np+'%':''}</div></div></div>`;
-  }).join('');
-}
-
-function drawPolarityChart(){
-  const canvas=document.getElementById('polarityChart');
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width=canvas.parentElement.clientWidth-48;
-  const H=canvas.height=260;
-  ctx.clearRect(0,0,W,H);
-
-  const scored=TOPICS.map(t=>{
-    const dd=DATA.byTopic[t];
-    return{name:t,score:(dd.positive-dd.negative)/dd.volume};
-  }).sort((a,b)=>b.score-a.score);
-
-  const pad={t:15,b:25,l:110,r:30};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-  const bh=ch/scored.length*.7;
-  const maxAbs=Math.max(...scored.map(s=>Math.abs(s.score)))*1.2;
+// ===== POLARITY CHART (horizontal bars) =====
+function drawPolarity(){
+  const{ctx,w,h}=setupCanvas('cPolarity',300);
+  const scored=TOPICS.map(t=>{const d=DATA.topics[t];return{n:t,s:(d.pos-d.neg)/d.vol}}).sort((a,b)=>b.s-a.s);
+  const pad={t:10,b:10,l:105,r:40};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const bh=ch/scored.length-2;
+  const mx=Math.max(...scored.map(s=>Math.abs(s.s)))*1.3;
   const mid=pad.l+cw/2;
 
-  ctx.strokeStyle='rgba(148,163,184,.2)';ctx.setLineDash([4,4]);
-  ctx.beginPath();ctx.moveTo(mid,pad.t);ctx.lineTo(mid,H-pad.b);ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.strokeStyle='rgba(148,163,184,.15)';ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(mid,pad.t);ctx.lineTo(mid,h-pad.b);ctx.stroke();ctx.setLineDash([]);
 
   scored.forEach((s,i)=>{
-    const y=pad.t+i*(ch/scored.length)+ch/scored.length*.15;
-    const barW=(s.score/maxAbs)*(cw/2);
-    ctx.fillStyle=s.score>=0?'rgba(34,197,94,.6)':'rgba(239,68,68,.6)';
-    if(s.score>=0){ctx.fillRect(mid,y,barW,bh)}else{ctx.fillRect(mid+barW,y,-barW,bh)}
-    ctx.fillStyle='rgba(148,163,184,.8)';ctx.font='10px Inter';ctx.textAlign='right';
-    ctx.fillText(s.name,pad.l-6,y+bh/2+4);
+    const y=pad.t+i*(ch/scored.length)+1;
+    const bW=(s.s/mx)*(cw/2);
+    const grad=ctx.createLinearGradient(mid,0,mid+bW,0);
+    if(s.s>=0){grad.addColorStop(0,'rgba(34,197,94,.3)');grad.addColorStop(1,'rgba(34,197,94,.7)');}
+    else{grad.addColorStop(0,'rgba(239,68,68,.3)');grad.addColorStop(1,'rgba(239,68,68,.7)');}
+    ctx.fillStyle=grad;
+    if(s.s>=0)ctx.fillRect(mid,y,bW,bh);else ctx.fillRect(mid+bW,y,-bW,bh);
+    ctx.fillStyle=C.tx2;ctx.font='10px Inter';ctx.textAlign='right';ctx.fillText(s.n,pad.l-6,y+bh/2+3);
+    ctx.fillStyle=s.s>=0?C.green:C.red;ctx.font='bold 9px Inter';ctx.textAlign=s.s>=0?'left':'right';
+    ctx.fillText((s.s>0?'+':'')+s.s.toFixed(3),s.s>=0?mid+bW+5:mid+bW-5,y+bh/2+3);
   });
 }
 
-function renderTweets(d){
-  const tbody=document.getElementById('tweetsBody');
-  let tweets=DATA.tweets;
-  const yf=document.getElementById('yearFilter').value;
-  const tf=document.getElementById('topicFilter').value;
-  if(yf!=='all')tweets=tweets.filter(t=>t.yr===parseInt(yf));
-  if(tf!=='all')tweets=tweets.filter(t=>t.topic===tf);
-  tbody.innerHTML=tweets.map(t=>{
-    const cls=t.sent==='positive'?'pill-pos':t.sent==='negative'?'pill-neg':'pill-neu';
-    return `<tr><td>${t.topic}</td><td style="max-width:350px">${t.tweet}</td><td>${fmt(t.likes)}</td><td>${fmt(t.rts)}</td><td><span class="pill ${cls}">${t.sent}</span></td><td>${t.yr}</td></tr>`;
+// ===== SENTIMENT BARS =====
+function renderSentBars(){
+  const el=document.getElementById('sentBars');
+  const sorted=TOPICS.slice().sort((a,b)=>DATA.topics[b].vol-DATA.topics[a].vol).slice(0,10);
+  el.innerHTML=sorted.map(t=>{
+    const d=DATA.topics[t],tot=d.pos+d.neg+d.neu;
+    const pp=Math.round(d.pos/tot*100),np=Math.round(d.neg/tot*100),nep=100-pp-np;
+    return `<div style="margin-bottom:.7rem"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:.8rem;font-weight:600">${t}</span><span style="font-size:.7rem;color:${C.tx2}">${fmt(tot)}</span></div><div class="sentiment-bar"><div style="width:${pp}%;background:${C.green}">${pp>8?pp+'%':''}</div><div style="width:${nep}%;background:${C.amber}">${nep>8?nep+'%':''}</div><div style="width:${np}%;background:${C.red}">${np>8?np+'%':''}</div></div></div>`;
   }).join('');
 }
 
-function renderSegments(){
-  document.getElementById('segGrid').innerHTML=SEGMENTS.map(s=>`
-    <div class="seg-card">
-      <div class="emoji">${s.emoji}</div>
-      <div class="seg-name">${s.name}</div>
-      <div class="seg-desc">${s.desc}</div>
-      <div class="seg-stats">
-        <div><strong>${s.pctTweets}%</strong>of tweets</div>
-        <div><strong>${s.avgSentiment>0?'+':''}${s.avgSentiment}</strong>sentiment</div>
-        <div><strong>${s.topTopic}</strong>top topic</div>
-      </div>
-    </div>
-  `).join('');
+// ===== DONUT =====
+function drawDonut(f){
+  const cv=document.getElementById('cDonut');
+  const dpr=window.devicePixelRatio||1;
+  cv.width=200*dpr;cv.height=200*dpr;cv.style.width='200px';cv.style.height='200px';
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const cx=100,cy=100,r=80,ir=50;
+  const tot=f.pos+f.neg+f.neu||1;
+  const slices=[{v:f.pos/tot,c:C.green,l:'Positive'},{v:f.neu/tot,c:C.amber,l:'Neutral'},{v:f.neg/tot,c:C.red,l:'Negative'}];
+  let angle=-Math.PI/2;
+  slices.forEach(s=>{
+    const sweep=s.v*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(cx+ir*Math.cos(angle),cy+ir*Math.sin(angle));
+    ctx.arc(cx,cy,r,angle,angle+sweep);ctx.arc(cx,cy,ir,angle+sweep,angle,true);
+    ctx.closePath();ctx.fillStyle=s.c;ctx.fill();
+    angle+=sweep;
+  });
+  ctx.beginPath();ctx.arc(cx,cy,ir-1,0,Math.PI*2);ctx.fillStyle=C.bg2;ctx.fill();
+  ctx.fillStyle=C.tx;ctx.font='bold 18px Inter';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(fmt(f.vol),cx,cy-6);
+  ctx.fillStyle=C.tx2;ctx.font='10px Inter';ctx.fillText('tweets',cx,cy+10);
+
+  document.getElementById('donutLegend').innerHTML=slices.map(s=>
+    `<div class="donut-legend-item"><div class="dot" style="background:${s.c}"></div>${s.l}: ${Math.round(s.v*100)}%</div>`
+  ).join('');
 }
 
-function drawAgeChart(){
-  const canvas=document.getElementById('ageChart');
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width=canvas.parentElement.clientWidth-48;
-  const H=canvas.height=240;
-  ctx.clearRect(0,0,W,H);
-
-  const ages=Object.keys(DATA.byAge);
-  const vals=ages.map(a=>DATA.byAge[a].volume);
-  const max=Math.max(...vals)*1.2;
-  const pad={t:20,b:35,l:55,r:20};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-  const bw=cw/ages.length*.55;
-
-  ages.forEach((a,i)=>{
-    const x=pad.l+i*(cw/ages.length)+cw/ages.length*.225;
-    const h=ch*(vals[i]/max);
-    const grad=ctx.createLinearGradient(0,pad.t+ch-h,0,pad.t+ch);
-    grad.addColorStop(0,'var(--acc)');grad.addColorStop(1,'rgba(99,102,241,.3)');
-    ctx.fillStyle=grad;
-    ctx.beginPath();ctx.roundRect?ctx.roundRect(x,pad.t+ch-h,bw,h,4):ctx.fillRect(x,pad.t+ch-h,bw,h);ctx.fill();
-    ctx.fillStyle='rgba(148,163,184,.7)';ctx.font='11px Inter';ctx.textAlign='center';
-    ctx.fillText(a,x+bw/2,H-pad.b+18);
-    ctx.fillText(fmt(vals[i]),x+bw/2,pad.t+ch-h-8);
-  });
-}
-
-function drawAgeSentChart(){
-  const canvas=document.getElementById('ageSentChart');
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width=canvas.parentElement.clientWidth-48;
-  const H=canvas.height=240;
-  ctx.clearRect(0,0,W,H);
-
-  const ages=Object.keys(DATA.byAge);
-  const vals=ages.map(a=>DATA.byAge[a].sentiment);
-  const maxAbs=Math.max(...vals.map(Math.abs))*1.5;
-  const pad={t:20,b:35,l:55,r:20};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-  const mid=pad.t+ch/2;
-  const bw=cw/ages.length*.55;
-
-  ctx.strokeStyle='rgba(148,163,184,.2)';ctx.setLineDash([4,4]);
-  ctx.beginPath();ctx.moveTo(pad.l,mid);ctx.lineTo(W-pad.r,mid);ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle='rgba(148,163,184,.4)';ctx.font='10px Inter';ctx.textAlign='right';
-  ctx.fillText('0',pad.l-8,mid+4);
-
-  ages.forEach((a,i)=>{
-    const x=pad.l+i*(cw/ages.length)+cw/ages.length*.225;
-    const h=Math.abs(vals[i]/maxAbs)*(ch/2);
-    ctx.fillStyle=vals[i]>=0?'rgba(34,197,94,.6)':'rgba(239,68,68,.6)';
-    if(vals[i]>=0){ctx.fillRect(x,mid-h,bw,h)}else{ctx.fillRect(x,mid,bw,h)}
-    ctx.fillStyle='rgba(148,163,184,.7)';ctx.font='11px Inter';ctx.textAlign='center';
-    ctx.fillText(a,x+bw/2,H-pad.b+18);
-    const label=(vals[i]>0?'+':'')+vals[i].toFixed(2);
-    ctx.fillText(label,x+bw/2,vals[i]>=0?mid-h-8:mid+h+14);
-  });
-}
-
-function drawHeatmap(){
-  const canvas=document.getElementById('heatmap');
-  const ctx=canvas.getContext('2d');
-  const W=canvas.width=canvas.parentElement.clientWidth-48;
-  const H=canvas.height=200;
-  ctx.clearRect(0,0,W,H);
-
-  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const pad={t:25,b:10,l:45,r:20};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
-  const cellW=cw/24,cellH=ch/7;
-  const maxVal=Math.max(...DATA.heatmap.map(h=>h.value));
-
-  DATA.heatmap.forEach(h=>{
-    const di=days.indexOf(h.day);
-    const x=pad.l+h.hour*cellW;
-    const y=pad.t+di*cellH;
-    const intensity=h.value/maxVal;
-    const r=Math.round(99+intensity*0);
-    const g=Math.round(102+intensity*0);
-    const b=Math.round(241);
-    ctx.fillStyle=`rgba(${r},${g},${b},${.08+intensity*.7})`;
-    ctx.fillRect(x+1,y+1,cellW-2,cellH-2);
-    if(cellW>20&&intensity>.7){
-      ctx.fillStyle='rgba(255,255,255,.8)';ctx.font='9px Inter';ctx.textAlign='center';
-      ctx.fillText(h.value,x+cellW/2,y+cellH/2+3);
-    }
-  });
-
-  days.forEach((d,i)=>{
-    ctx.fillStyle='rgba(148,163,184,.6)';ctx.font='10px Inter';ctx.textAlign='right';
-    ctx.fillText(d,pad.l-6,pad.t+i*cellH+cellH/2+4);
-  });
-  for(let h=0;h<24;h+=3){
-    ctx.fillStyle='rgba(148,163,184,.5)';ctx.font='9px Inter';ctx.textAlign='center';
-    ctx.fillText(h+':00',pad.l+h*cellW+cellW/2,pad.t-8);
-  }
+// ===== TWEETS TABLE =====
+function renderTweets(){
+  const yv=document.getElementById('yearFilter').value;
+  const tv=document.getElementById('topicFilter').value;
+  let tw=DATA.tweets;
+  if(yv!=='all')tw=tw.filter(t=>t.yr===+yv);
+  if(tv!=='all')tw=tw.filter(t=>t.topic===tv);
+  document.getElementById('tBody').innerHTML=tw.map(t=>{
+    const cls=t.sent==='positive'?'pill-pos':t.sent==='negative'?'pill-neg':'pill-neu';
+    return `<tr><td>${t.topic}</td><td style="max-width:320px">${t.tweet}</td><td>${fmt(t.likes)}</td><td>${fmt(t.rts)}</td><td><span class="pill ${cls}">${t.sent}</span></td><td>${t.yr}</td></tr>`;
+  }).join('');
 }
 
 let sortDir=1;
-function sortTable(col){
-  const tbody=document.getElementById('tweetsBody');
-  const rows=Array.from(tbody.rows);
-  sortDir*=-1;
-  rows.sort((a,b)=>{
-    let av=a.cells[col].textContent,bv=b.cells[col].textContent;
-    if(col===2||col===3||col===5){
-      av=parseFloat(av.replace(/[KM,]/g,m=>m==='K'?'e3':m==='M'?'e6':''))||0;
-      bv=parseFloat(bv.replace(/[KM,]/g,m=>m==='K'?'e3':m==='M'?'e6':''))||0;
-      return(av-bv)*sortDir;
-    }
-    return av.localeCompare(bv)*sortDir;
-  });
-  rows.forEach(r=>tbody.appendChild(r));
+function sortTbl(c){
+  const tb=document.getElementById('tBody');const rows=[...tb.rows];sortDir*=-1;
+  rows.sort((a,b)=>{let av=a.cells[c].textContent,bv=b.cells[c].textContent;
+    if(c===2||c===3||c===5){av=parseFloat(av.replace(/[KM]/g,m=>m==='K'?'e3':'e6'))||0;bv=parseFloat(bv.replace(/[KM]/g,m=>m==='K'?'e3':'e6'))||0;return(av-bv)*sortDir}
+    return av.localeCompare(bv)*sortDir});
+  rows.forEach(r=>tb.appendChild(r));
 }
 
-function updateDashboard(){
-  const d=getFiltered();
-  renderKPIs(d);
-  renderInsight(d);
-  drawVolumeChart(d);
-  drawSentimentChart(d);
-  renderTagCloud(d);
-  renderTweets(d);
+// ===== SEGMENTS =====
+function renderSegs(){
+  document.getElementById('segGrid').innerHTML=SEGMENTS.map(s=>`
+    <div class="seg-card"><div class="emoji">${s.emoji}</div><div class="seg-name">${s.name}</div>
+    <div class="seg-desc">${s.desc}</div><div class="seg-stats">
+    <div><strong>${s.pct}%</strong>of tweets</div>
+    <div><strong>${s.sent>0?'+':''}${s.sent}</strong>sentiment</div>
+    <div><strong>${s.top}</strong>top topic</div></div></div>`).join('');
+}
+
+// ===== AGE CHARTS =====
+function drawAge(){
+  const{ctx,w,h}=setupCanvas('cAge',240);
+  const pad={t:25,b:35,l:20,r:20};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const vals=AGES.map(a=>Math.round(1800000*a.pct));
+  const mx=Math.max(...vals)*1.2;
+  const bw=cw/AGES.length*.55;
+
+  AGES.forEach((a,i)=>{
+    const x=pad.l+i*(cw/AGES.length)+cw/AGES.length*.225;
+    const bh=ch*(vals[i]/mx);
+    const grad=ctx.createLinearGradient(0,pad.t+ch-bh,0,pad.t+ch);
+    grad.addColorStop(0,C.acc);grad.addColorStop(1,'rgba(99,102,241,.25)');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.rect(x,pad.t+ch-bh,bw,bh);ctx.fill();
+    ctx.fillStyle=C.tx2;ctx.font='11px Inter';ctx.textAlign='center';
+    ctx.fillText(a.label,x+bw/2,h-pad.b+18);
+    ctx.fillStyle=C.tx;ctx.font='bold 11px Inter';
+    ctx.fillText(fmt(vals[i]),x+bw/2,pad.t+ch-bh-10);
+  });
+}
+
+function drawAgeSent(){
+  const{ctx,w,h}=setupCanvas('cAgeSent',240);
+  const pad={t:25,b:35,l:20,r:20};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const mid=pad.t+ch/2;
+  const mx=Math.max(...AGES.map(a=>Math.abs(a.sent)))*2;
+  const bw=cw/AGES.length*.55;
+
+  ctx.strokeStyle='rgba(148,163,184,.2)';ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(pad.l,mid);ctx.lineTo(w-pad.r,mid);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=C.tx2;ctx.font='10px Inter';ctx.textAlign='left';ctx.fillText('0',pad.l,mid-6);
+
+  AGES.forEach((a,i)=>{
+    const x=pad.l+i*(cw/AGES.length)+cw/AGES.length*.225;
+    const bh=Math.abs(a.sent/mx)*(ch/2);
+    const clr=a.sent>=0?C.green:C.red;
+    const grad=ctx.createLinearGradient(0,a.sent>=0?mid-bh:mid,0,a.sent>=0?mid:mid+bh);
+    grad.addColorStop(0,clr);grad.addColorStop(1,clr.replace(')',', 0.25)').replace('rgb','rgba'));
+    ctx.fillStyle=grad;
+    if(a.sent>=0)ctx.fillRect(x,mid-bh,bw,bh);else ctx.fillRect(x,mid,bw,bh);
+    ctx.fillStyle=C.tx2;ctx.font='11px Inter';ctx.textAlign='center';
+    ctx.fillText(a.label,x+bw/2,h-pad.b+18);
+    ctx.fillStyle=clr;ctx.font='bold 11px Inter';
+    const lbl=(a.sent>0?'+':'')+a.sent.toFixed(2);
+    ctx.fillText(lbl,x+bw/2,a.sent>=0?mid-bh-10:mid+bh+16);
+  });
+}
+
+// ===== HEATMAP =====
+function drawHeat(){
+  const{ctx,w,h}=setupCanvas('cHeat',210);
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const pad={t:28,b:8,l:42,r:15};
+  const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+  const cellW=cw/24,cellH=ch/7;
+  const mxV=Math.max(...DATA.heatmap.map(h=>h.value));
+
+  DATA.heatmap.forEach(h=>{
+    const x=pad.l+h.hour*cellW,y=pad.t+h.di*cellH;
+    const t=h.value/mxV;
+    ctx.fillStyle=`rgba(99,102,241,${(.06+t*.75).toFixed(2)})`;
+    const r=Math.min(cellW,cellH)/2-1.5;
+    ctx.beginPath();ctx.arc(x+cellW/2,y+cellH/2,r*(.4+t*.6),0,Math.PI*2);ctx.fill();
+  });
+
+  days.forEach((d,i)=>{ctx.fillStyle=C.tx2;ctx.font='10px Inter';ctx.textAlign='right';
+    ctx.fillText(d,pad.l-6,pad.t+i*cellH+cellH/2+4)});
+  for(let h=0;h<24;h+=3){ctx.fillStyle=C.tx2;ctx.font='9px Inter';ctx.textAlign='center';
+    ctx.fillText(h+':00',pad.l+h*cellW+cellW/2,pad.t-10)}
+}
+
+// ===== UPDATE ALL =====
+function updateAll(){
+  const f=getF();
+  renderKPIs(f);drawVolume(f);drawSentYear(f);renderCloud(f);drawDonut(f);renderTweets();
 }
 
 function init(){
-  populateFilters();
-  const d=getFiltered();
-  renderKPIs(d);
-  renderInsight(d);
-  drawVolumeChart(d);
-  drawSentimentChart(d);
-  drawTopicsChart();
-  renderTagCloud(d);
-  renderSentimentBars();
-  drawPolarityChart();
-  renderTweets(d);
-  renderSegments();
-  drawAgeChart();
-  drawAgeSentChart();
-  drawHeatmap();
+  initFilters();
+  const f=getF();
+  renderKPIs(f);renderInsight();drawVolume(f);drawSentYear(f);
+  drawTopics();renderCloud(f);drawPolarity();renderSentBars();drawDonut(f);
+  renderTweets();renderSegs();drawAge();drawAgeSent();drawHeat();
 }
 
 window.addEventListener('load',init);
 window.addEventListener('resize',()=>{
-  const d=getFiltered();
-  drawVolumeChart(d);drawSentimentChart(d);drawTopicsChart();
-  drawPolarityChart();drawAgeChart();drawAgeSentChart();drawHeatmap();
+  const f=getF();drawVolume(f);drawSentYear(f);drawTopics();drawPolarity();drawAge();drawAgeSent();drawHeat();
 });
 </script>
 </body>
