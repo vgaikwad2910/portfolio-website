@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5 A/B Testing Traps | Vaishnavi Gaikwad</title>
+  <meta name="description" content="The most common A/B testing mistakes I've seen after running hundreds of experiments — and what to check before you celebrate a significant result.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .blog-post { max-width: 720px; margin: 0 auto; padding: 6rem 1.5rem 4rem; }
+    .blog-post__back { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; margin-bottom: 2.5rem; }
+    .blog-post__back:hover { opacity: 0.8; }
+    .blog-post__label { font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 1rem; }
+    .blog-post__title { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem; color: var(--text-primary); }
+    .blog-post__meta { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+    .blog-post__body { color: var(--text-secondary); line-height: 1.85; font-size: 1.05rem; }
+    .blog-post__body p { margin-bottom: 1.5rem; }
+    .blog-post__body h2 { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 2.5rem 0 1rem; }
+    .blog-post__body blockquote { border-left: 3px solid var(--accent); padding-left: 1.25rem; margin: 2rem 0; color: var(--text-primary); font-style: italic; font-size: 1.1rem; }
+    .blog-post__body strong { color: var(--text-primary); }
+    .trap-number { display: inline-block; background: var(--accent); color: #000; font-weight: 800; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+    .blog-post__footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .blog-post__author { font-size: 0.9rem; color: var(--text-muted); }
+    .blog-post__author strong { color: var(--text-primary); display: block; margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="../index.html" class="nav__logo">VG</a>
+      <ul class="nav__links">
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#projects">Projects</a></li>
+        <li><a href="../index.html#certifications">Certifications</a></li>
+        <li><a href="../index.html#blog">Blog</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="blog-post">
+    <a href="../index.html#blog" class="blog-post__back">&larr; Back to Blog</a>
+
+    <p class="blog-post__label">Experimentation</p>
+    <h1 class="blog-post__title">5 A/B Testing Traps I've Seen After Running Hundreds of Experiments</h1>
+    <p class="blog-post__meta">April 2026 &middot; 7 min read &middot; Vaishnavi Gaikwad</p>
+
+    <div class="blog-post__body">
+
+      <blockquote>"Our A/B test is significant!" is one of the most dangerous sentences in data science.</blockquote>
+
+      <p>I've run a lot of experiments. Across supply chain analytics, e-commerce, and now product at Intuit — the domain changes but the mistakes stay remarkably consistent. What follows are the five traps I see most often, including ones I've fallen into myself.</p>
+
+      <h2><span class="trap-number">TRAP 01</span><br/>Skipping the Power Analysis</h2>
+
+      <p>Most experiments are designed backwards. A team has a hypothesis, they ship the experiment, they wait a few weeks, and then they check if it's significant. The sample size is whatever traffic happens to arrive in that window.</p>
+
+      <p>This is how you end up with underpowered tests that can't detect real effects — and then make product decisions based on "no significant difference" when the truth is "we didn't have nearly enough data to know." Power analysis needs to happen before the experiment launches, not after. You need to commit to a minimum detectable effect, calculate the required sample size, and run the test until you hit it.</p>
+
+      <p>An underpowered test that fails to detect a real effect isn't a clean result — it's a missed signal. Treating it as evidence of no effect is one of the most common and consequential mistakes in experimentation.</p>
+
+      <h2><span class="trap-number">TRAP 02</span><br/>Peeking at Results Before the Test Ends</h2>
+
+      <p>Business pressure to know if something is working is real and understandable. The problem is that checking results before your pre-specified end date — and stopping early when you see significance — dramatically inflates your false positive rate.</p>
+
+      <p>If you check your experiment daily and stop when p &lt; 0.05, you're not running a 5% false positive rate test. You're running something much closer to 30%. The significance threshold assumes a single look at the data. Every additional look without adjustment changes the math.</p>
+
+      <p>The right approaches are either committing to the pre-specified end date and not peeking, or using sequential testing methods that explicitly account for multiple looks and maintain valid error rates throughout the test.</p>
+
+      <h2><span class="trap-number">TRAP 03</span><br/>Ignoring Sample Ratio Mismatch</h2>
+
+      <p>Sample ratio mismatch (SRM) happens when the actual split of users between control and treatment differs meaningfully from the intended split. If you designed a 50/50 test but your control got 48% and treatment got 52%, something went wrong — and your results are not trustworthy.</p>
+
+      <p>SRM is a sign of instrumentation bugs, selective filtering, or randomization failures. It doesn't matter what your p-value says if the groups aren't actually comparable. SRM detection should be the first check you run before interpreting any experiment results.</p>
+
+      <p>Most teams only check for SRM when results look suspicious. It should be a mandatory pre-analysis check for every experiment, every time.</p>
+
+      <h2><span class="trap-number">TRAP 04</span><br/>Running Multiple Comparisons Without Correction</h2>
+
+      <p>A single experiment often tests multiple metrics — primary, secondary, guardrails. Or multiple variants against a single control. Each additional comparison you run at p &lt; 0.05 adds another 5% chance of a false positive. Run enough comparisons and you'll find something "significant" through pure probability.</p>
+
+      <p>The solution isn't to stop measuring multiple things — it's to be explicit about your primary metric before the experiment runs and to apply appropriate corrections (Bonferroni, Benjamini-Hochberg) when interpreting secondary metrics. The hierarchy of metrics matters: pre-specify what you'll use to make the launch decision, and treat everything else as exploratory.</p>
+
+      <h2><span class="trap-number">TRAP 05</span><br/>Confusing Statistical Significance with Practical Significance</h2>
+
+      <p>With enough traffic, almost anything will be statistically significant. A 0.01% improvement in click-through rate at p &lt; 0.001 is still a 0.01% improvement. Statistical significance tells you the effect is real. It says nothing about whether the effect is worth acting on.</p>
+
+      <p>Every experiment result needs two questions answered: Is this effect real? And is this effect meaningful enough to justify the cost of the change — engineering debt, maintenance burden, opportunity cost of not building something else?</p>
+
+      <p>Effect size and confidence intervals matter as much as the p-value. Get comfortable presenting results in terms of the magnitude and range of the effect, not just whether the null hypothesis was rejected.</p>
+
+      <h2>The Underlying Issue</h2>
+
+      <p>Most of these traps share a common root: treating experimentation as a procedure to get through rather than a discipline to practice rigorously. The goal of an experiment is not to get a p-value. It's to reduce uncertainty about a decision. That distinction changes how you design, run, and interpret experiments.</p>
+
+      <p>If you're interested in exploring these concepts interactively, I built an <a href="https://vgaikwad2910.github.io/portfolio-website/projects/ab-testing-simulator/index.html" style="color:var(--accent);">A/B testing simulator</a> that lets you adjust test parameters in real time and see how design choices affect your results. Worth playing with if you're building your intuition around experimentation.</p>
+
+    </div>
+
+    <div class="blog-post__footer">
+      <div class="blog-post__author">
+        <strong>Vaishnavi Gaikwad</strong>
+        Senior Data Scientist at Intuit &middot; <a href="https://www.linkedin.com/in/vaishnavi-gaikwad-23506481/" target="_blank" style="color:var(--accent);">LinkedIn</a>
+      </div>
+      <a href="../index.html#blog" class="btn btn--outline" style="font-size:0.875rem;">More Posts</a>
+    </div>
+  </main>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
