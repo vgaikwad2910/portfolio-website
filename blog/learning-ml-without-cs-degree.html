@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning ML Without a CS Degree | Vaishnavi Gaikwad</title>
+  <meta name="description" content="A candid account of what it actually feels like to learn machine learning from scratch without a computer science background.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .blog-post { max-width: 720px; margin: 0 auto; padding: 6rem 1.5rem 4rem; }
+    .blog-post__back { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; margin-bottom: 2.5rem; }
+    .blog-post__back:hover { opacity: 0.8; }
+    .blog-post__label { font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 1rem; }
+    .blog-post__title { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem; color: var(--text-primary); }
+    .blog-post__meta { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+    .blog-post__body { color: var(--text-secondary); line-height: 1.85; font-size: 1.05rem; }
+    .blog-post__body p { margin-bottom: 1.5rem; }
+    .blog-post__body h2 { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 2.5rem 0 1rem; }
+    .blog-post__body h3 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 2rem 0 0.75rem; }
+    .blog-post__body blockquote { border-left: 3px solid var(--accent); padding-left: 1.25rem; margin: 2rem 0; color: var(--text-primary); font-style: italic; font-size: 1.1rem; }
+    .blog-post__body strong { color: var(--text-primary); }
+    .blog-post__footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .blog-post__author { font-size: 0.9rem; color: var(--text-muted); }
+    .blog-post__author strong { color: var(--text-primary); display: block; margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="../index.html" class="nav__logo">VG</a>
+      <ul class="nav__links">
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#projects">Projects</a></li>
+        <li><a href="../index.html#certifications">Certifications</a></li>
+        <li><a href="../index.html#blog">Blog</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="blog-post">
+    <a href="../index.html#blog" class="blog-post__back">&larr; Back to Blog</a>
+
+    <p class="blog-post__label">Learning</p>
+    <h1 class="blog-post__title">The Overwhelm Was Real: Learning ML Without a CS Degree</h1>
+    <p class="blog-post__meta">April 2026 &middot; 5 min read &middot; Vaishnavi Gaikwad</p>
+
+    <div class="blog-post__body">
+
+      <p>I want to be honest about something that most career-pivot posts skip over: learning machine learning without a computer science background is genuinely hard. Not impossible — I'm living proof of that — but hard in ways that caught me off guard, and hard in ways that took longer than I expected to work through.</p>
+
+      <p>This is an attempt to describe that experience accurately, for anyone who's in it right now.</p>
+
+      <h2>The Vocabulary Problem</h2>
+
+      <p>The first barrier wasn't the math. It wasn't even the code. It was the language. Machine learning has its own dense vocabulary — loss functions, gradient descent, regularization, hyperparameters, overfitting, embeddings — and resources tend to assume you either already know these terms or will pick them up through osmosis.</p>
+
+      <p>I didn't. For a long time, I was reading sentences where I understood every individual word but couldn't extract meaning from the whole. It's a specific kind of frustrating, and it's worth naming because it can feel like a personal failure when it's really just a prerequisite gap.</p>
+
+      <p>What helped: slowing down aggressively. Instead of powering through a course, I'd stop at every unfamiliar concept and go deep on it before moving forward. It felt inefficient. It was actually the fastest path.</p>
+
+      <h2>The "Everyone Else Gets It" Feeling</h2>
+
+      <blockquote>The hardest part wasn't the content — it was the constant background noise of feeling like I was the only one who didn't already know this.</blockquote>
+
+      <p>In courses, in meetups, in online communities — there's a particular performance of confidence that makes it easy to conclude everyone around you has a firmer grasp than you do. They don't, mostly. But the feeling is real and it's worth acknowledging rather than dismissing.</p>
+
+      <p>The antidote I found was doing rather than watching. The moment I stopped consuming content and started building things — even small, imperfect things — the gap between me and "people who know this" started to feel less fixed. Building something bad is more instructive than watching someone else build something good.</p>
+
+      <h2>Model Selection: Where I Got Genuinely Lost</h2>
+
+      <p>There's a specific chapter of learning ML that I found particularly overwhelming: model selection. Not just understanding individual algorithms, but knowing when to use which one, why, and what the tradeoffs are.</p>
+
+      <p>Linear regression vs. logistic regression vs. decision trees vs. random forests vs. gradient boosting vs. neural networks — and that's before you get into the hyperparameter space of each. The question "which model should I use for this problem?" felt unanswerable for a long time.</p>
+
+      <p>What eventually helped was building an intuition framework rather than trying to memorize rules. Understanding the nature of your data — its size, dimensionality, noisiness, the interpretability requirements of the problem — gives you a starting point. The rest comes from repetition and reading post-mortems from people who've made these choices in production.</p>
+
+      <h2>Making Models Better: The Iteration Problem</h2>
+
+      <p>Running a model is the easy part. Knowing why it's not performing well — and what to do about it — took much longer to develop. Diagnosing underfitting versus overfitting, understanding when more data will help versus when architecture changes are needed, knowing what your evaluation metrics are actually measuring and what they're missing.</p>
+
+      <p>This is the part of ML that I think is genuinely hard to learn from courses, because courses tend to show you clean examples that work. Real problems are messier. The model that seemed fine on validation performs poorly in production. The metric you optimized for turns out not to be the metric the business cares about. The data has subtle distribution shift you didn't account for.</p>
+
+      <p>The only thing that built this skill for me was working on real problems with real stakes, making mistakes, and being rigorous about understanding what went wrong.</p>
+
+      <h2>What I'd Tell Someone Starting Now</h2>
+
+      <p><strong>The overwhelm is part of the process, not a sign you're failing it.</strong> Every practitioner I respect has been exactly where you are. The field is large and moves fast and nobody knows all of it. That's not a bug; that's what makes it interesting.</p>
+
+      <p><strong>Build things as early as possible.</strong> Even if they're bad. Especially if they're bad. The feedback loop of building something, seeing it fail, and understanding why is irreplaceable.</p>
+
+      <p><strong>Find your anchor problems.</strong> Abstract learning doesn't stick the way problem-anchored learning does. Find questions you actually care about answering and let those drive your curriculum.</p>
+
+      <p><strong>Give yourself more time than you think you need.</strong> The timeline for genuine competence is measured in years, not weeks. Knowing that going in makes the journey less demoralizing.</p>
+
+      <p>The overwhelm was real for me. It was also temporary — not because it disappeared, but because I grew around it. You will too.</p>
+
+    </div>
+
+    <div class="blog-post__footer">
+      <div class="blog-post__author">
+        <strong>Vaishnavi Gaikwad</strong>
+        Senior Data Scientist at Intuit &middot; <a href="https://www.linkedin.com/in/vaishnavi-gaikwad-23506481/" target="_blank" style="color:var(--accent);">LinkedIn</a>
+      </div>
+      <a href="../index.html#blog" class="btn btn--outline" style="font-size:0.875rem;">More Posts</a>
+    </div>
+  </main>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
