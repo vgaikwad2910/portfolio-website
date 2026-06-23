@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -271,6 +272,26 @@
           </div>
         </div>
 
+        <div class="project-card" style="border-color:color-mix(in srgb,var(--accent) 30%,var(--border));position:relative;">
+          <div style="position:absolute;top:1rem;right:1rem;font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:0.65rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:3px;padding:0.15rem 0.45rem;">New</div>
+          <div class="project-card__img">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="12" cy="10" r="2"/><path d="M8 10h.01M16 10h.01"/></svg>
+          </div>
+          <div class="project-card__body">
+            <div class="project-card__tags">
+              <span class="project-card__tag">LLM Agent</span>
+              <span class="project-card__tag">Tool Use</span>
+              <span class="project-card__tag">FAISS</span>
+            </div>
+            <h3 class="project-card__title">World Strongest XI: Squad Intelligence Agent</h3>
+            <p class="project-card__desc">A conversational AI agent built on the Anthropic Claude API that answers natural language questions over 18,000 FC 26 player profiles. Ask it to pick a formation, find player twins, or predict a matchup — it calls specialised tools and explains its reasoning.</p>
+            <div class="project-card__links">
+              <a href="blog/wc2026-ep1-i-dont-watch-football.html" class="project-card__link">Read the Series &rarr;</a>
+              <a href="https://github.com/vgaikwad2910" target="_blank" class="project-card__link">GitHub &rarr;</a>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
@@ -384,6 +405,58 @@
         </article>
 
       </div>
+
+      <!-- ===== WORLD CUP 2026 DATA SERIES ===== -->
+      <div style="margin-top:3.5rem;">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.75rem;">
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+          <div style="display:flex;align-items:center;gap:0.6rem;flex-shrink:0;">
+            <span style="font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:0.7rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:4px;padding:0.2rem 0.6rem;">Series</span>
+            <span style="font-size:0.9rem;font-weight:700;color:var(--text-primary);">World Cup 2026 &middot; Data Series</span>
+          </div>
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+        </div>
+
+        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1.75rem;max-width:600px;">I don't watch football. So I used data science to fix that — 18,000 FC 26 player ratings, Monte Carlo simulation, and FAISS similarity search to follow the World Cup through data.</p>
+
+        <div class="blog__grid">
+
+          <article class="blog-card" style="border-color:color-mix(in srgb,var(--accent) 25%,var(--border));position:relative;">
+            <div style="position:absolute;top:1rem;right:1rem;font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:0.65rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:3px;padding:0.15rem 0.45rem;">Ep. 01</div>
+            <p class="blog-card__date">June 2026</p>
+            <h3 class="blog-card__title">I Don't Watch Football. So I Used Data Science to Fix That.</h3>
+            <p class="blog-card__excerpt">Position-weighted scoring across 18,406 players, a squad ranking engine, and a Monte Carlo match predictor — because nodding along wasn't cutting it.</p>
+            <a href="blog/wc2026-ep1-i-dont-watch-football.html" class="blog-card__read-more">Read more &rarr;</a>
+          </article>
+
+          <article class="blog-card" style="opacity:0.55;">
+            <div style="display:inline-block;font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:0.65rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);background:color-mix(in srgb,var(--border) 60%,transparent);border:1px solid var(--border);border-radius:3px;padding:0.15rem 0.45rem;margin-bottom:0.75rem;">Ep. 02 &middot; Coming Soon</div>
+            <p class="blog-card__date">July 2026</p>
+            <h3 class="blog-card__title">Player Twins: Finding Mbappé's Statistical Doppelgänger</h3>
+            <p class="blog-card__excerpt">Using FAISS nearest-neighbour search to find players with statistically identical profiles across every national squad — and what those twins reveal about squad depth.</p>
+            <span class="blog-card__read-more" style="color:var(--text-muted);cursor:default;">Coming soon</span>
+          </article>
+
+          <article class="blog-card" style="opacity:0.45;">
+            <div style="display:inline-block;font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:0.65rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);background:color-mix(in srgb,var(--border) 60%,transparent);border:1px solid var(--border);border-radius:3px;padding:0.15rem 0.45rem;margin-bottom:0.75rem;">Ep. 03 &middot; Coming Soon</div>
+            <p class="blog-card__date">July 2026</p>
+            <h3 class="blog-card__title">Knockout Stage Predictions: What the Model Said vs. What Happened</h3>
+            <p class="blog-card__excerpt">Running the Monte Carlo predictor through every knockout fixture and scoring it honestly against actual results. Where the model was right, where it failed, and why.</p>
+            <span class="blog-card__read-more" style="color:var(--text-muted);cursor:default;">Coming soon</span>
+          </article>
+
+          <article class="blog-card" style="opacity:0.4;">
+            <div style="display:inline-block;font-family:var(--font-mono,'JetBrains Mono',monospace);font-size:0.65rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);background:color-mix(in srgb,var(--border) 60%,transparent);border:1px solid var(--border);border-radius:3px;padding:0.15rem 0.45rem;margin-bottom:0.75rem;">Ep. 04 &middot; Coming Soon</div>
+            <p class="blog-card__date">July 2026</p>
+            <h3 class="blog-card__title">Ask the Data: Building an Agent Over 18,000 Players</h3>
+            <p class="blog-card__excerpt">Building a Claude tool-use agent that answers natural language questions over the squad dataset. "Who is England's best 4-3-3?" — answered by an LLM calling specialised tools, not just pattern matching.</p>
+            <span class="blog-card__read-more" style="color:var(--text-muted);cursor:default;">Coming soon</span>
+          </article>
+
+        </div>
+      </div>
+      <!-- ===== END WORLD CUP 2026 DATA SERIES ===== -->
+
     </div>
   </section>
 
