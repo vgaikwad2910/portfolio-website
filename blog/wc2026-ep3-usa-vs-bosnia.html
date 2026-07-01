@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>USA vs Bosnia: A Match Prediction Built on Poisson, Bayes, and FC 26 | Vaishnavi Gaikwad</title>
+  <meta name="description" content="Episode 3 — World Cup 2026 Data Series. An enhanced Bayesian Poisson model with FC 26 player quality composites predicts USA vs Bosnia, Round of 32.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .post-hero {
+      padding: 7rem 0 3.5rem;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+    }
+    .post-hero__inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .post-hero__series {
+      display: inline-block;
+      font-family: var(--font-mono, 'JetBrains Mono', monospace);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      border-radius: 4px;
+      padding: 0.25rem 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .post-hero__title {
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+    .post-hero__meta {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+    .post-hero__meta a { color: var(--text-muted); text-decoration: none; }
+    .post-hero__meta a:hover { color: var(--accent); }
+    .post-hero__meta-sep { opacity: 0.4; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 1.75rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); }
+    .post-body {
+      padding: 3.5rem 0 5rem;
+    }
+    .post-body__inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: var(--text-secondary);
+    }
+    .post-body__inner h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 2.5rem 0 1rem;
+    }
+    .post-body__inner h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 2rem 0 0.75rem;
+    }
+    .post-body__inner p { margin-bottom: 1.25rem; }
+    .post-body__inner hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.5rem 0;
+    }
+    .post-body__inner strong { color: var(--text-primary); }
+    .post-body__inner ul { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+    .post-body__inner ul li { margin-bottom: 0.5rem; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin: 1.5rem 0;
+    }
+    .data-table th, .data-table td {
+      padding: 0.65rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table th {
+      color: var(--text-primary);
+      font-weight: 600;
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+    .data-table td { color: var(--text-secondary); }
+    .callout {
+      background: color-mix(in srgb, var(--accent) 6%, transparent);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+    .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+    .chart-figure {
+      margin: 2rem 0;
+      text-align: center;
+    }
+    .chart-figure img {
+      max-width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .chart-figure figcaption {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+    .prob-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .prob-card {
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .prob-card__pct {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .prob-card__label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .series-nav {
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2.5rem 0;
+    }
+    .series-nav__label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .series-nav__list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .series-nav__list li {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+    }
+    .series-nav__list li:last-child { border-bottom: none; }
+    .series-nav__list li.active { color: var(--text-primary); font-weight: 600; }
+    .series-nav__list li a { color: var(--text-secondary); text-decoration: none; }
+    .series-nav__list li a:hover { color: var(--accent); }
+    .ep-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--border);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .ep-badge.current {
+      background: var(--accent);
+      color: #fff;
+    }
+    .ep-badge.upcoming { opacity: 0.5; }
+    .stack-note {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .stack-note p { font-size: 0.85rem !important; margin-bottom: 0.5rem !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="../index.html" class="nav__logo">VG</a>
+      <ul class="nav__links">
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#projects">Projects</a></li>
+        <li><a href="../index.html#certifications">Certifications</a></li>
+        <li><a href="../index.html#blog">Blog</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+        <button class="nav__hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== POST HERO ===== -->
+  <div class="post-hero">
+    <div class="post-hero__inner">
+      <a href="../index.html#blog" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back to Blog
+      </a>
+      <div class="post-hero__series">World Cup 2026 &middot; Data Series &middot; Episode 3 of 6</div>
+      <h1 class="post-hero__title">USA vs Bosnia: A Match Prediction Built on Poisson, Bayes, and FC&nbsp;26</h1>
+      <div class="post-hero__meta">
+        <span>Vaishnavi Gaikwad</span>
+        <span class="post-hero__meta-sep">&middot;</span>
+        <span>July 2026</span>
+        <span class="post-hero__meta-sep">&middot;</span>
+        <span>6 min read</span>
+        <span class="post-hero__meta-sep">&middot;</span>
+        <a href="https://github.com/vgaikwad2910" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POST BODY ===== -->
+  <article class="post-body">
+    <div class="post-body__inner">
+
+      <p>My last prediction got stuffed. Turkey-style. 🦃</p>
+
+      <p>I ran a Bayesian Poisson model on USA vs Türkiye, declared USA wins 2–0 with confidence, and watched Türkiye win 3–2. The model didn't just miss the result — it missed it in the most dramatic way possible.</p>
+
+      <p>Moving on. Round of 32. USA vs Bosnia. This time I upgraded the model.</p>
+
+      <hr>
+
+      <h2>What's Different This Time</h2>
+
+      <p>The previous model was entirely team-level — it knew how many goals each team scored and conceded in the group stage, smoothed those numbers toward the tournament average, and ran 100,000 simulated matches. It knew nothing about the actual players on the pitch.</p>
+
+      <p>This version adds a <strong>player quality layer</strong> on top of that foundation. For each team's predicted starting XI, I pulled FC 26 ratings and computed two composites per player:</p>
+
+      <ul>
+        <li><strong>ATK composite</strong> = (Shooting + Dribbling) / 2 — for attackers and midfielders</li>
+        <li><strong>DEF composite</strong> = Defending rating — for defenders and the goalkeeper</li>
+      </ul>
+
+      <p>These are averaged across the starting lineup and normalized against a baseline of 72 (roughly the tournament average player). The result is a quality multiplier applied to each team's expected goals (λ) before the Monte Carlo simulation runs.</p>
+
+      <p>The idea: group stage stats tell you what a team <em>did</em>. FC 26 composites tell you something about what they're <em>capable of</em>, based on the individuals selected.</p>
+
+      <hr>
+
+      <h2>The Model, Step by Step</h2>
+
+      <h3>Step 1 — Raw rates from the group stage</h3>
+      <p>Data sourced from FotMob. USA scored 8 goals in 3 games (2.67/game) and conceded 4 (1.33/game). Bosnia scored 5 (1.67/game) and conceded 6 (2.00/game). Tournament average: 1.46 goals per team per game across all group stage matches.</p>
+
+      <h3>Step 2 — Bayesian smoothing</h3>
+      <p>Three games is a tiny sample. A team that scores 5 goals in one game looks elite; a team that went quiet looks poor. Bayesian smoothing blends each team's rate toward the tournament average using a prior of 3 imaginary "average" games:</p>
+
+      <div class="callout">
+        <p><strong>smoothed_rate = (raw_rate × n_games + avg × prior) / (n_games + prior)</strong></p>
+        <p>With prior = 3 and tournament avg = 1.46, a team's 3 real games carry equal weight to 3 imaginary average games. More games → less pulled toward the mean. Fewer games → more conservative estimate.</p>
+      </div>
+
+      <h3>Step 3 — Dixon-Coles attack/defense strengths</h3>
+      <p>Each team gets an attack strength (how much they score relative to the tournament average) and a defense strength (how little they concede). The expected goals for USA against Bosnia is:</p>
+
+      <div class="callout">
+        <p><strong>λ_USA = (USA attack strength / avg) × (Bosnia defense strength / avg) × avg</strong></p>
+      </div>
+
+      <h3>Step 4 — Player quality multiplier</h3>
+      <p>With predicted starting XIs for both teams, FC 26 composites are normalized to a baseline of 72. USA's quality multiplier came out at <strong>1.099</strong> (roughly a 10% boost) and Bosnia's at <strong>1.016</strong>. These scale each team's λ up or down before simulation.</p>
+
+      <table class="data-table">
+        <thead><tr><th>Team</th><th>Raw goals/game</th><th>Smoothed λ</th><th>Quality multiplier</th><th>Final λ</th></tr></thead>
+        <tbody>
+          <tr><td>USA</td><td>2.67</td><td>2.44</td><td>1.099</td><td>2.69</td></tr>
+          <tr><td>Bosnia</td><td>1.67</td><td>1.57</td><td>1.016</td><td>1.52</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Step 5 — Monte Carlo simulation</h3>
+      <p>With λ_USA = 2.69 and λ_Bosnia = 1.52, I draw 100,000 pairs of Poisson random numbers — one for each team in each simulated match. Count up the results. That's it.</p>
+
+      <p>Think of it like two bags of numbered balls. USA's bag has "2" and "3" as the most common draws. Bosnia's bag has "1" and "2". Close your eyes, pull one from each, record the result. Do that 100,000 times. You get probabilities.</p>
+
+      <hr>
+
+      <h2>The Prediction</h2>
+
+      <figure class="chart-figure">
+        <img src="images/wc2026-ep3-radar.png" alt="USA vs Bosnia WC2026 Round of 32 Team Intelligence Radar Chart" loading="lazy">
+        <figcaption>Team intelligence radar — 6 dimensions built from FotMob group stage data + FC 26 player composites. USA dominates on attack and possession; Bosnia is more physical and compact.</figcaption>
+      </figure>
+
+      <div class="prob-grid">
+        <div class="prob-card">
+          <div class="prob-card__pct" style="color:#00d47a;">62.3%</div>
+          <div class="prob-card__label">USA win (90 min)</div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-card__pct" style="color:#f0c040;">17.5%</div>
+          <div class="prob-card__label">Goes to penalties</div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-card__pct" style="color:#ff7733;">20.2%</div>
+          <div class="prob-card__label">Bosnia win (90 min)</div>
+        </div>
+      </div>
+
+      <p>Most likely scoreline: <strong>USA 2–1</strong> at 8.2% probability. The radar tells the broader story — USA leads on attack output and possession, while Bosnia is more physical and defensively compact. If Bosnia can frustrate USA in transition and keep it level, the penalty scenario becomes very real.</p>
+
+      <hr>
+
+      <h2>What the Model Still Can't See</h2>
+
+      <div class="callout">
+        <p><strong>Still missing:</strong></p>
+        <ul>
+          <li>Tactical matchups — high press vs. low block, formation battles</li>
+          <li>Current form and fitness of individual players</li>
+          <li>Injuries or suspensions heading into the match</li>
+          <li>Set piece quality (corners and free kicks are disproportionately impactful)</li>
+          <li>The chaos factor — knockout football doesn't care about expected goals</li>
+        </ul>
+      </div>
+
+      <p>The player quality layer is an improvement, but it's still a static snapshot. FC 26 ratings don't know that Pulisic played 120 minutes three days ago, or that Bosnia's goalkeeper had the tournament of his life in the group stage.</p>
+
+      <p>Let's see if the model survives this one. 🤞</p>
+
+      <div class="series-nav">
+        <div class="series-nav__label">World Cup 2026 &middot; Data Series</div>
+        <ul class="series-nav__list">
+          <li><span class="ep-badge">1</span> <a href="wc2026-ep1-i-dont-watch-football.html">I Don't Watch Football. So I Used Data Science to Fix That.</a></li>
+          <li><span class="ep-badge">2</span> Player Twins: Finding Mbappé's Statistical Doppelgänger <em style="font-size:0.8em;">&mdash; coming soon</em></li>
+          <li class="active"><span class="ep-badge current">3</span> USA vs Bosnia: A Match Prediction Built on Poisson, Bayes, and FC 26 <em style="font-size:0.8em;color:var(--accent);">&larr; you are here</em></li>
+          <li><span class="ep-badge upcoming">4</span> Ask the Data: Building an Agent Over 18,000 Players</li>
+          <li><span class="ep-badge upcoming">5</span> UMAP Archetypes: How Every Squad Is Unique (and Where They Overlap)</li>
+          <li><span class="ep-badge upcoming">6</span> World Cup Wrap-Up: What 18,000 Players and 100,000 Simulations Taught Me</li>
+        </ul>
+      </div>
+
+      <div class="stack-note">
+        <p><em>Built with: Python &middot; FotMob WC2026 stats &middot; FC 26 player composites &middot; Bayesian Poisson &middot; Dixon-Coles &middot; Monte Carlo &middot; matplotlib &nbsp;&middot;&nbsp; Code: <a href="https://github.com/vgaikwad2910" target="_blank" rel="noopener" style="color:var(--accent);">github.com/vgaikwad2910</a></em></p>
+        <p><em>Vaishnavi Gaikwad is a Senior Data Scientist at Intuit, working on QuickBooks digital self-help. These projects are personal explorations built outside of work.</em></p>
+      </div>
+
+    </div>
+  </article>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <p class="footer__text">&copy; 2026 Vaishnavi Gaikwad. Built with care.</p>
+      <ul class="footer__links">
+        <li><a href="https://www.linkedin.com/in/vaishnavi-gaikwad-23506481/" target="_blank">LinkedIn</a></li>
+        <li><a href="https://github.com/vgaikwad2910" target="_blank">GitHub</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
