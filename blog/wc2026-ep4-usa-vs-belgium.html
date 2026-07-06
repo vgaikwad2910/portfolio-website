@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>USA vs Belgium: The Balogun Effect — What the Data Actually Says | Vaishnavi Gaikwad</title>
+  <meta name="description" content="Episode 4 — World Cup 2026 Data Series. Real xG data + Bayesian Poisson + two-scenario simulation: does Balogun's reinstatement actually change USA's odds against Belgium?">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .post-hero {
+      padding: 7rem 0 3.5rem;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+    }
+    .post-hero__inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .post-hero__series {
+      display: inline-block;
+      font-family: var(--font-mono, 'JetBrains Mono', monospace);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      border-radius: 4px;
+      padding: 0.25rem 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .post-hero__title {
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+    .post-hero__meta {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+    .post-hero__meta a { color: var(--text-muted); text-decoration: none; }
+    .post-hero__meta a:hover { color: var(--accent); }
+    .post-hero__meta-sep { opacity: 0.4; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 1.75rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); }
+    .post-body {
+      padding: 3.5rem 0 5rem;
+    }
+    .post-body__inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: var(--text-secondary);
+    }
+    .post-body__inner h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 2.5rem 0 1rem;
+    }
+    .post-body__inner h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 2rem 0 0.75rem;
+    }
+    .post-body__inner p { margin-bottom: 1.25rem; }
+    .post-body__inner hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.5rem 0;
+    }
+    .post-body__inner strong { color: var(--text-primary); }
+    .post-body__inner ul { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+    .post-body__inner ul li { margin-bottom: 0.5rem; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin: 1.5rem 0;
+    }
+    .data-table th, .data-table td {
+      padding: 0.65rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table th {
+      color: var(--text-primary);
+      font-weight: 600;
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+    .data-table td { color: var(--text-secondary); }
+    .callout {
+      background: color-mix(in srgb, var(--accent) 6%, transparent);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+    .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+    .callout.warning {
+      background: color-mix(in srgb, #f0c040 6%, transparent);
+      border-left-color: #f0c040;
+    }
+    .chart-figure {
+      margin: 2rem 0;
+      text-align: center;
+    }
+    .chart-figure img {
+      max-width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .chart-figure figcaption {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+    .prob-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .prob-card {
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .prob-card__pct {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .prob-card__label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .scenario-card {
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .scenario-card__title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .scenario-card__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.35rem 0;
+      font-size: 0.9rem;
+    }
+    .scenario-card__row span:first-child { color: var(--text-muted); }
+    .scenario-card__row span:last-child { font-weight: 700; color: var(--text-primary); }
+    .series-nav {
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2.5rem 0;
+    }
+    .series-nav__label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .series-nav__list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .series-nav__list li {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+    }
+    .series-nav__list li:last-child { border-bottom: none; }
+    .series-nav__list li.active { color: var(--text-primary); font-weight: 600; }
+    .series-nav__list li a { color: var(--text-secondary); text-decoration: none; }
+    .series-nav__list li a:hover { color: var(--accent); }
+    .ep-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--border);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .ep-badge.current {
+      background: var(--accent);
+      color: #fff;
+    }
+    .ep-badge.upcoming { opacity: 0.5; }
+    .stack-note {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .stack-note p { font-size: 0.85rem !important; margin-bottom: 0.5rem !important; }
+    .delta-pill {
+      display: inline-block;
+      font-family: var(--font-mono, 'JetBrains Mono', monospace);
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: color-mix(in srgb, #00d47a 12%, transparent);
+      color: #00d47a;
+      border: 1px solid color-mix(in srgb, #00d47a 30%, transparent);
+      border-radius: 4px;
+      padding: 0.15rem 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="../index.html" class="nav__logo">VG</a>
+      <ul class="nav__links">
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#projects">Projects</a></li>
+        <li><a href="../index.html#certifications">Certifications</a></li>
+        <li><a href="../index.html#blog">Blog</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+        <button class="nav__hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== POST HERO ===== -->
+  <div class="post-hero">
+    <div class="post-hero__inner">
+      <a href="../index.html#blog" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back to Blog
+      </a>
+      <div class="post-hero__series">World Cup 2026 &middot; Data Series &middot; Episode 4 of 6</div>
+      <h1 class="post-hero__title">USA vs Belgium: The Balogun Effect — What the Data Actually Says</h1>
+      <div class="post-hero__meta">
+        <span>Vaishnavi Gaikwad</span>
+        <span class="post-hero__meta-sep">&middot;</span>
+        <span>July 6, 2026</span>
+        <span class="post-hero__meta-sep">&middot;</span>
+        <span>7 min read</span>
+        <span class="post-hero__meta-sep">&middot;</span>
+        <a href="https://github.com/vgaikwad2910" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POST BODY ===== -->
+  <article class="post-body">
+    <div class="post-body__inner">
+
+      <p>My last model got it right. USA beat Bosnia 2–0. The prediction said USA 2–1, so close enough. I'll take it.</p>
+
+      <p>Round of 16. USA vs Belgium. Today. And the internet has been absolutely losing it over one name: <strong>Folarin Balogun</strong>.</p>
+
+      <p>He picked up a red card. Then the appeal came through and it was dismissed. He's playing. Cue the celebrations, the "America is back" posts, the dramatic ESPN graphics. So here is the actual question — <em>how much does Balogun being on the pitch actually change USA's odds?</em></p>
+
+      <p>I ran the numbers. The answer might surprise you.</p>
+
+      <hr>
+
+      <h2>The Upgrade: Real xG Data</h2>
+
+      <p>In the previous episodes, I used goals scored and conceded to estimate each team's attacking and defensive strength. Goals are clean and intuitive, but they're also noisy — a single striker hot streak or goalkeeper howler can swing the numbers without reflecting the team's actual quality of play.</p>
+
+      <p>For this match, I upgraded to <strong>expected goals (xG)</strong>. Instead of asking "how many goals did they score?", xG asks "how many goals should they have scored, given the quality and location of every shot they took?" It's a much more stable signal across small sample sizes like a four-game tournament.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Match</th>
+            <th>USA xGF</th>
+            <th>USA xGA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>vs Paraguay (W 4–1)</td><td>1.35</td><td>0.47</td></tr>
+          <tr><td>vs Australia (W 2–0)</td><td>1.08</td><td>0.35</td></tr>
+          <tr><td>vs Türkiye (L 2–3)</td><td>2.06</td><td>2.71</td></tr>
+          <tr><td>vs Bosnia (W 2–0)</td><td>0.88</td><td>0.25</td></tr>
+          <tr><td><strong>Tournament total</strong></td><td><strong>5.37</strong></td><td><strong>3.78</strong></td></tr>
+        </tbody>
+      </table>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Match</th>
+            <th>Belgium xGF</th>
+            <th>Belgium xGA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>vs Egypt (D 1–1)</td><td>1.35</td><td>1.08</td></tr>
+          <tr><td>vs Iran (D 0–0)</td><td>1.79</td><td>0.62</td></tr>
+          <tr><td>vs New Zealand (W 5–1)</td><td>3.65</td><td>0.25</td></tr>
+          <tr><td>vs Senegal (W 3–2)</td><td>1.74</td><td>3.58</td></tr>
+          <tr><td><strong>Tournament total</strong></td><td><strong>8.53</strong></td><td><strong>5.53</strong></td></tr>
+        </tbody>
+      </table>
+
+      <p>Two numbers jump out immediately. Belgium generated <strong>8.53 xG in four games</strong> — the #1 xG differential in the tournament at +3.00. USA sits at +1.59 (xGF 5.37 minus xGA 3.78), ranking around #19. By the underlying quality of chances created, this isn't close.</p>
+
+      <p>There's one more thing the xG data reveals: USA has been <strong>finishing at 1.86× their expected rate</strong>. They've scored 10 goals on 5.37 xG. Belgium, by contrast, is inline at ~1.06×. What that means is USA's actual scoreline looks better than the underlying quality warrants. Whether that represents elite finishing or unsustainable luck is, frankly, the most important unknown heading into today.</p>
+
+      <hr>
+
+      <h2>The Model, Rebuilt Around xG</h2>
+
+      <h3>Step 1 — Bayesian smoothing on xG rates</h3>
+      <p>Four games is still a small sample. The same Bayesian smoothing from Episode 3 applies here, but using per-game xG averages rather than goals. Tournament average: <strong>1.35 xG per team per game</strong>. Prior weight: 3 imaginary "average" games.</p>
+
+      <div class="callout">
+        <p><strong>smoothed_xG = (total_xG + prior × tournament_avg) / (games + prior)</strong></p>
+        <p>USA xGF per game = 5.37 / 4 = 1.34. Smoothed: (5.37 + 3 × 1.35) / (4 + 3) = <strong>1.34/game</strong></p>
+        <p>Belgium xGF per game = 8.53 / 4 = 2.13. Smoothed: (8.53 + 3 × 1.35) / (4 + 3) = <strong>1.80/game</strong></p>
+      </div>
+
+      <h3>Step 2 — Dixon-Coles attack and defense strengths</h3>
+      <p>Each team's smoothed xG attack and defense rates are divided by the tournament average to get relative strength scores. USA's attack and Belgium's defense are then combined to estimate how many goals we should expect USA to generate against Belgium specifically (and vice versa).</p>
+
+      <h3>Step 3 — FC 26 player quality multiplier</h3>
+      <p>This is where the two-scenario model lives. For each predicted starting XI, I computed attacking and defensive composites from FC 26 ratings and normalized them against a baseline of 72. The composite scores:</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Team / Role</th><th>Players</th><th>FC 26 composite</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>USA ATK (with Balogun)</td><td>Pulisic 82, Balogun 76.5, Tillman 76.5, McKennie 73</td><td>77.0</td></tr>
+          <tr><td>USA ATK (without Balogun)</td><td>Pulisic 82, Tillman 76.5, McKennie 73, sub 69</td><td>75.1</td></tr>
+          <tr><td>USA DEF</td><td>Freese 74, Ream 73, Richards 75, Robinson 75, Dest 72, Adams 72</td><td>73.5</td></tr>
+          <tr><td>Belgium ATK</td><td>De Bruyne 83.5, Trossard 80.5, Doku 79, Tielemans 78, De Ketelaere 77.5, Vanaken 73</td><td>78.6</td></tr>
+          <tr><td>Belgium DEF</td><td>Courtois 87, Mechele 78, Theate 77, De Cuyper 75, Castagne 72, Vanaken 73, De Ketelaere 70</td><td>76.0</td></tr>
+        </tbody>
+      </table>
+
+      <p>Belgium's defense is anchored by Thibaut Courtois (87 overall in FC 26 — one of the highest-rated goalkeepers in the game). That single player meaningfully suppresses what USA can expect to score.</p>
+
+      <h3>Step 4 — 100,000 simulated matches</h3>
+      <p>With each team's final expected goals (λ) determined, I draw 100,000 Poisson random pairs. A Poisson distribution models rare, independent events — each goal in a match is roughly independent of the last. Draws go to penalties with a 50/50 coin flip, as is standard for knockout rounds.</p>
+
+      <hr>
+
+      <h2>The Prediction</h2>
+
+      <figure class="chart-figure">
+        <img src="images/wc2026-ep4-radar.png" alt="USA vs Belgium WC2026 Round of 16 — Bayesian Poisson prediction radar with two scenarios" loading="lazy">
+        <figcaption>Team intelligence radar — 6 dimensions built from WC 2026 real xG data + FC 26 player composites. Belgium leads on attack, defense, technical quality, and pace. USA's edge is possession and finishing efficiency.</figcaption>
+      </figure>
+
+      <h3>Scenario A — Balogun plays (as announced)</h3>
+
+      <div class="prob-grid">
+        <div class="prob-card">
+          <div class="prob-card__pct" style="color:#00d47a;">45.4%</div>
+          <div class="prob-card__label">USA win</div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-card__pct" style="color:#f0c040;">24.6%</div>
+          <div class="prob-card__label">Goes to penalties</div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-card__pct" style="color:#ff3333;">54.6%</div>
+          <div class="prob-card__label">Belgium win</div>
+        </div>
+      </div>
+
+      <p>Most likely scorelines: <strong>1–1</strong> at 11.2% &rarr; penalties, <strong>1–2 Belgium</strong> at 8.9%, <strong>0–1 Belgium</strong> at 8.1%, <strong>2–1 USA</strong> at 7.8%.</p>
+
+      <h3>Scenario B — Balogun suspended (counterfactual)</h3>
+
+      <div class="scenario-grid">
+        <div class="scenario-card">
+          <div class="scenario-card__title">With Balogun (actual)</div>
+          <div class="scenario-card__row"><span>USA wins</span><span style="color:#00d47a;">45.4%</span></div>
+          <div class="scenario-card__row"><span>Penalties</span><span style="color:#f0c040;">24.6%</span></div>
+          <div class="scenario-card__row"><span>Belgium wins</span><span style="color:#ff3333;">54.6%</span></div>
+          <div class="scenario-card__row"><span>&lambda; USA</span><span>1.382</span></div>
+        </div>
+        <div class="scenario-card">
+          <div class="scenario-card__title">Without Balogun (counterfactual)</div>
+          <div class="scenario-card__row"><span>USA wins</span><span style="color:#00d47a;">44.4%</span></div>
+          <div class="scenario-card__row"><span>Penalties</span><span style="color:#f0c040;">24.3%</span></div>
+          <div class="scenario-card__row"><span>Belgium wins</span><span style="color:#ff3333;">55.6%</span></div>
+          <div class="scenario-card__row"><span>&lambda; USA</span><span>1.349</span></div>
+        </div>
+      </div>
+
+      <p>The Balogun effect: <span class="delta-pill">+1.1% for USA</span> &nbsp; That's it. One point one percent.</p>
+
+      <p>All the hype, all the drama around the red card and the appeal — it moves USA's win probability by just over one percentage point. That's not a criticism of Balogun; it's a reflection of how tight the margin is at this level. One player rarely swings a match between two evenly matched sides, and the data agrees.</p>
+
+      <hr>
+
+      <h2>What the Numbers Are Really Saying</h2>
+
+      <p><strong>Belgium is the structural favorite.</strong> They have the #1 xG differential in the tournament. They have Courtois in goal. They have De Bruyne and Doku in attack. The underlying quality of play throughout this tournament suggests Belgium should win this match — not by a huge margin, but clearly.</p>
+
+      <p><strong>USA is an overperformer.</strong> Scoring 10 goals on 5.37 xG is remarkable finishing efficiency. But if that rate normalizes toward 1.0× — which it statistically tends to do — USA's actual output starts looking a lot closer to their expected goals. That's not a comfortable position against Belgium's defense.</p>
+
+      <p><strong>But knockout football is weird.</strong> 45.4% is still nearly a coin flip. A Pulisic worldie in the 78th minute doesn't care about xG. The model gives Belgium the edge on structure; the match gives USA every opportunity to steal it on a single moment of brilliance.</p>
+
+      <div class="callout warning">
+        <p><strong>What the model can't see:</strong></p>
+        <ul>
+          <li>Whether USA's finishing efficiency holds or regresses under elite defensive pressure</li>
+          <li>Doku's pace against USA's fullbacks in open space — a structural mismatch the model doesn't capture</li>
+          <li>How Belgium responds to pressure late in a match if it's level</li>
+          <li>Set piece quality — both teams are strong here and the model ignores it entirely</li>
+          <li>The effect of crowd, fatigue, and the sheer unpredictability of knockout football</li>
+        </ul>
+      </div>
+
+      <p>I'll be watching this one live for the first time in the series. Let's see which version of both teams shows up.</p>
+
+      <hr>
+
+      <h2>Why This Matters Beyond the Match</h2>
+
+      <p>I started this series not knowing anything about football. I've now built a model that evolves with each episode — from goals to xG, from estimated player quality to real tournament data. And one thing has become clear: <strong>the best models are honest about what they don't know</strong>.</p>
+
+      <p>This model puts Belgium at 54.6%. That's not "Belgium wins." It means if you ran this match 100 times, Belgium wins about 55 and USA wins about 45. The model is expressing uncertainty, not certainty. That's a feature, not a limitation.</p>
+
+      <p>Watching football through data hasn't made it less exciting. It's made every match a real-time test of what the numbers predicted — and that tension is exactly why I got into this.</p>
+
+      <div class="series-nav">
+        <div class="series-nav__label">World Cup 2026 &middot; Data Series</div>
+        <ul class="series-nav__list">
+          <li><span class="ep-badge">1</span> <a href="wc2026-ep1-i-dont-watch-football.html">I Don't Watch Football. So I Used Data Science to Fix That.</a></li>
+          <li><span class="ep-badge">2</span> Player Twins: Finding Mbapp&eacute;&rsquo;s Statistical Doppelg&auml;nger <em style="font-size:0.8em;">&mdash; coming soon</em></li>
+          <li><span class="ep-badge">3</span> <a href="wc2026-ep3-usa-vs-bosnia.html">USA vs Bosnia: A Match Prediction Built on Poisson, Bayes, and FC 26</a></li>
+          <li class="active"><span class="ep-badge current">4</span> USA vs Belgium: The Balogun Effect — What the Data Actually Says <em style="font-size:0.8em;color:var(--accent);">&larr; you are here</em></li>
+          <li><span class="ep-badge upcoming">5</span> UMAP Archetypes: How Every Squad Is Unique (and Where They Overlap)</li>
+          <li><span class="ep-badge upcoming">6</span> World Cup Wrap-Up: What 18,000 Players and 100,000 Simulations Taught Me</li>
+        </ul>
+      </div>
+
+      <div class="stack-note">
+        <p><em>Built with: Python &middot; RealGM xG Tracker (WC 2026 live data) &middot; FC 26 player composites &middot; Bayesian Poisson &middot; Dixon-Coles &middot; Monte Carlo (100k simulations) &middot; matplotlib &nbsp;&middot;&nbsp; Code: <a href="https://github.com/vgaikwad2910" target="_blank" rel="noopener" style="color:var(--accent);">github.com/vgaikwad2910</a></em></p>
+        <p><em>Vaishnavi Gaikwad is a Senior Data Scientist at Intuit, working on QuickBooks digital self-help. These projects are personal explorations built outside of work.</em></p>
+      </div>
+
+    </div>
+  </article>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <p class="footer__text">&copy; 2026 Vaishnavi Gaikwad. Built with care.</p>
+      <ul class="footer__links">
+        <li><a href="https://www.linkedin.com/in/vaishnavi-gaikwad-23506481/" target="_blank">LinkedIn</a></li>
+        <li><a href="https://github.com/vgaikwad2910" target="_blank">GitHub</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
