@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>France vs Spain: I Found a Bug in My Model — and Five Signals Agreed Anyway | Vaishnavi Gaikwad</title>
+  <meta name="description" content="Episode 5 — World Cup 2026 Data Series. After getting Norway vs England wrong, I fixed a formula inversion bug, added 5 new features, and pulled in prediction market signals. Here's what the data says about the France vs Spain semifinal.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .post-hero {
+      padding: 7rem 0 3.5rem;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+    }
+    .post-hero__inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .post-hero__series {
+      display: inline-block;
+      font-family: var(--font-mono, 'JetBrains Mono', monospace);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      border-radius: 4px;
+      padding: 0.25rem 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .post-hero__title {
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+    .post-hero__meta {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+    .post-hero__meta a { color: var(--text-muted); text-decoration: none; }
+    .post-hero__meta a:hover { color: var(--accent); }
+    .post-hero__meta-sep { opacity: 0.4; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 1.75rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); }
+    .post-body {
+      padding: 3.5rem 0 5rem;
+    }
+    .post-body__inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: var(--text-secondary);
+    }
+    .post-body__inner h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 2.5rem 0 1rem;
+    }
+    .post-body__inner h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 2rem 0 0.75rem;
+    }
+    .post-body__inner p { margin-bottom: 1.25rem; }
+    .post-body__inner hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.5rem 0;
+    }
+    .post-body__inner strong { color: var(--text-primary); }
+    .post-body__inner ul { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+    .post-body__inner ul li { margin-bottom: 0.5rem; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin: 1.5rem 0;
+    }
+    .data-table th, .data-table td {
+      padding: 0.65rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table th {
+      color: var(--text-primary);
+      font-weight: 600;
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+    .data-table td { color: var(--text-secondary); }
+    .callout {
+      background: color-mix(in srgb, var(--accent) 6%, transparent);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+    .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+    .callout.warning {
+      background: color-mix(in srgb, #f0c040 6%, transparent);
+      border-left-color: #f0c040;
+    }
+    .callout.error {
+      background: color-mix(in srgb, #ff3333 6%, transparent);
+      border-left-color: #ff3333;
+    }
+    .prob-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .prob-card {
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .prob-card__pct {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .prob-card__label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .scenario-card {
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .scenario-card__title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .scenario-card__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.35rem 0;
+      font-size: 0.9rem;
+    }
+    .scenario-card__row span:first-child { color: var(--text-muted); }
+    .scenario-card__row span:last-child { font-weight: 700; color: var(--text-primary); }
+    .series-nav {
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2.5rem 0;
+    }
+    .series-nav__label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .series-nav__list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .series-nav__list li {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+    }
+    .series-nav__list li:last-child { border-bottom: none; }
+    .series-nav__list li.active { color: var(--text-primary); font-weight: 600; }
+    .series-nav__list li a { color: var(--text-secondary); text-decoration: none; }
+    .series-nav__list li a:hover { color: var(--accent); }
+    .ep-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--border);
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .ep-badge.current {
+      background: var(--accent);
+      color: #fff;
+    }
+    .ep-badge.upcoming { opacity: 0.5; }
+    .stack-note {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .stack-note p { font-size: 0.85rem !important; margin-bottom: 0.5rem !important; }
+    .delta-pill {
+      display: inline-block;
+      font-family: var(--font-mono, 'JetBrains Mono', monospace);
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: color-mix(in srgb, #00d47a 12%, transparent);
+      color: #00d47a;
+      border: 1px solid color-mix(in srgb, #00d47a 30%, transparent);
+      border-radius: 4px;
+      padding: 0.15rem 0.5rem;
+    }
+    .delta-pill.neg {
+      background: color-mix(in srgb, #ff3333 12%, transparent);
+      color: #ff3333;
+      border-color: color-mix(in srgb, #ff3333 30%, transparent);
+    }
+    .code-block {
+      font-family: var(--font-mono, 'JetBrains Mono', monospace);
+      font-size: 0.82rem;
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      overflow-x: auto;
+    }
+    .code-block .c { color: var(--text-muted); }
+    .code-block .hi { color: var(--accent); font-weight: 600; }
+    .code-block .err { color: #ff3333; }
+    .ensemble-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 1.5rem 0;
+    }
+    .ensemble-table th, .ensemble-table td {
+      padding: 0.7rem 0.9rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .ensemble-table th {
+      color: var(--text-primary);
+      font-weight: 600;
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .ensemble-table td { color: var(--text-secondary); }
+    .ensemble-table tr.ensemble-total td {
+      font-weight: 700;
+      color: var(--text-primary);
+      background: color-mix(in srgb, var(--accent) 5%, transparent);
+      border-top: 2px solid var(--accent);
+    }
+    .signal-bar {
+      display: inline-block;
+      height: 6px;
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    .lineup-block {
+      background: var(--bg-secondary, #0d0d1a);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1rem 0;
+      font-family: var(--font-mono, 'JetBrains Mono', monospace);
+      font-size: 0.85rem;
+      line-height: 1.9;
+      color: var(--text-secondary);
+    }
+    .lineup-block .lineup-team {
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    .lineup-block .key-player { color: var(--accent); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="../index.html" class="nav__logo">VG</a>
+      <ul class="nav__links">
+        <li><a href="../index.html#about">About</a></li>
+        <li><a href="../index.html#projects">Projects</a></li>
+        <li><a href="../index.html#certifications">Certifications</a></li>
+        <li><a href="../index.html#blog">Blog</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <button class="theme-toggle" aria-label="Toggle theme">&#9788;</button>
+        <button class="nav__hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== POST HERO ===== -->
+  <div class="post-hero">
+    <div class="post-hero__inner">
+      <a href="../index.html#blog" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Back to Blog
+      </a>
+      <div class="post-hero__series">World Cup 2026 &middot; Data Series &middot; Episode 5 of 6</div>
+      <h1 class="post-hero__title">France vs Spain: I Found a Bug in My Model — and Five Signals Agreed Anyway</h1>
+      <div class="post-hero__meta">
+        <span>Vaishnavi Gaikwad</span>
+        <span class="post-hero__meta-sep">&middot;</span>
+        <span>July 9, 2026</span>
+        <span class="post-hero__meta-sep">&middot;</span>
+        <span>11 min read</span>
+        <span class="post-hero__meta-sep">&middot;</span>
+        <a href="https://github.com/vgaikwad2910" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POST BODY ===== -->
+  <article class="post-body">
+    <div class="post-body__inner">
+
+      <p>The last episode did not go well. My model had Norway as the 55.6% favorite over England in the quarterfinal. England won 2–1. I got it wrong.</p>
+
+      <p>So before doing anything else today, I went back into the code. And I found something embarrassing: <strong>the defense term in my lambda formula was inverted</strong>. For four episodes, my model had been treating a stronger defense as a bonus for the opposing team's attack. It was backwards.</p>
+
+      <p>After fixing that — and adding five new features, a confirmed lineup, and prediction market signals — here is what the data says about France vs Spain.</p>
+
+      <hr>
+
+      <h2>The Bug: Inverted Defense</h2>
+
+      <p>The Bayesian Poisson model estimates the expected goals for each team as a function of that team's attack strength and the opponent's defense strength. Here is the original formula I was using:</p>
+
+      <div class="code-block">
+        <span class="c"># WRONG — defense was inverted</span><br>
+        &lambda;_A = (atk_A / baseline) &times; <span class="err">(baseline / def_B)</span> &times; quality &times; baseline
+      </div>
+
+      <p>The problem: when a team has a strong defense (low xGA → <code>def_B &lt; baseline</code>), the term <code>baseline / def_B</code> becomes <em>greater than 1</em>. Better defense → higher opponent expected goals. That is exactly the opposite of what it should do.</p>
+
+      <div class="code-block">
+        <span class="c"># CORRECT — defense properly suppresses opponent attack</span><br>
+        &lambda;_A = (atk_A / baseline) &times; <span class="hi">(def_B / baseline)</span> &times; quality &times; baseline<br>
+        <br>
+        <span class="c"># Simplifies to: atk_A &times; def_B &times; quality / baseline</span><br>
+        <span class="c"># When def_B is strong (low xGA → def_B/baseline &lt; 1), &lambda;_A is suppressed ✓</span>
+      </div>
+
+      <p>Retroactive validation: running Norway vs England with the corrected formula gives England <strong>63.2%</strong>. England won. The fixed model had it right; the broken one didn't.</p>
+
+      <div class="callout error">
+        <p><strong>Why this mattered most for that specific matchup:</strong> Norway had a game where they scored 2 on just 1.05 xGF (massive overperformance vs Brazil). England's xGA included a blowout outlier. The inverted formula amplified both errors simultaneously — it saw Norway's poor underlying defense as a boost for Norway's attack, and England's strong defense as a gift to Norway's lambda. Two compounding mistakes, same direction.</p>
+      </div>
+
+      <hr>
+
+      <h2>Three Structural Fixes</h2>
+
+      <h3>Fix 1: Winsorize xG at 2.5</h3>
+      <p>Single outlier games (Norway's 1.05 xGF blowout, France's 3.24 xGF against a weak group-stage opponent) were pulling the model too hard. Any xGF or xGA above 2.5 per game gets capped at 2.5 before averaging. It's a standard robustness technique — you still see that the game was strong, but you don't let one outlier dominate six games of signal.</p>
+
+      <h3>Fix 2: Opponent quality scaling</h3>
+      <p>A 3.24 xGF against a group-stage side is not the same as a 3.24 xGF against a quarterfinalist. Every game in the sample now gets quality-adjusted before entering the model:</p>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Round</th><th>Quality factor</th><th>Effect on xGF</th><th>Effect on xGA</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Group stage</td><td>0.72</td><td>&times; 0.72 (deflated)</td><td>&divide; 0.72 (inflated)</td></tr>
+          <tr><td>Round of 32</td><td>0.80</td><td>&times; 0.80</td><td>&divide; 0.80</td></tr>
+          <tr><td>Round of 16</td><td>0.87</td><td>&times; 0.87</td><td>&divide; 0.87</td></tr>
+          <tr><td>Quarter-final</td><td>0.94</td><td>&times; 0.94</td><td>&divide; 0.94</td></tr>
+        </tbody>
+      </table>
+
+      <p>Scoring against a weaker opponent gets down-weighted; conceding against a weaker opponent gets up-weighted. This substantially reduces France's raw dominance numbers while barely touching their QF data — the most tournament-relevant games now carry the most weight.</p>
+
+      <h3>Fix 3: Stronger Bayesian prior at the semifinal stage</h3>
+      <p>At the quarterfinal, I used a prior weight of 3 imaginary "average" games. For the semifinal, I increased that to 4. With only 6 games of data, we are still working with a small sample. Stronger shrinkage toward the tournament baseline (1.35 xG/game) prevents two or three exceptional performances from dominating the posterior.</p>
+
+      <hr>
+
+      <h2>The Data: Six Games Each</h2>
+
+      <p>France and Spain have both played six matches to reach the semifinal. Here is the full picture after applying all three fixes (winsorize at 2.5, quality-adjust by round, Bayesian smoothing):</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>France &mdash; Match</th>
+            <th>Raw xGF</th>
+            <th>Raw xGA</th>
+            <th>Adj. xGF</th>
+            <th>Adj. xGA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Group stage (vs Iraq)</td><td>3.24</td><td>0.50</td><td>1.80</td><td>0.69</td></tr>
+          <tr><td>Group stage (vs Mexico)</td><td>1.79</td><td>0.85</td><td>1.29</td><td>1.18</td></tr>
+          <tr><td>Group stage</td><td>1.50</td><td>1.70</td><td>1.08</td><td>2.36</td></tr>
+          <tr><td>Round of 32</td><td>3.17</td><td>0.67</td><td>2.00</td><td>0.84</td></tr>
+          <tr><td>Round of 16</td><td>1.56</td><td>0.19</td><td>1.36</td><td>0.22</td></tr>
+          <tr><td>Quarter-final</td><td>3.04</td><td>0.14</td><td>2.35</td><td>0.15</td></tr>
+          <tr><td><strong>Total</strong></td><td><strong>14.30</strong></td><td><strong>4.05</strong></td><td><strong>9.88</strong></td><td><strong>5.44</strong></td></tr>
+        </tbody>
+      </table>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Spain &mdash; Match</th>
+            <th>Raw xGF</th>
+            <th>Raw xGA</th>
+            <th>Adj. xGF</th>
+            <th>Adj. xGA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Group stage</td><td>2.30</td><td>0.25</td><td>1.66</td><td>0.35</td></tr>
+          <tr><td>Group stage</td><td>0.86</td><td>0.19</td><td>0.62</td><td>0.26</td></tr>
+          <tr><td>Group stage</td><td>2.25</td><td>0.15</td><td>1.62</td><td>0.21</td></tr>
+          <tr><td>Round of 32</td><td>2.80</td><td>0.29</td><td>2.00</td><td>0.36</td></tr>
+          <tr><td>Round of 16</td><td>1.77</td><td>0.60</td><td>1.54</td><td>0.69</td></tr>
+          <tr><td>Quarter-final</td><td>2.08</td><td>0.38</td><td>1.96</td><td>0.40</td></tr>
+          <tr><td><strong>Total</strong></td><td><strong>12.06</strong></td><td><strong>1.86</strong></td><td><strong>9.40</strong></td><td><strong>2.27</strong></td></tr>
+        </tbody>
+      </table>
+
+      <p>The raw numbers tell the story immediately. France has the highest total xGF in the tournament at <strong>14.3 in six games</strong>. Spain has the best defense in the tournament — just <strong>0.31 xGA per game</strong> before quality adjustment. This is the irresistible force vs. the immovable object: the tournament's best attack against its best defensive structure.</p>
+
+      <p>After quality adjustment, the gap narrows considerably. France's monster group-stage outputs against weaker sides deflate from 3.24 to 1.80 and 3.17 to 2.00. The matchup becomes genuinely tight.</p>
+
+      <hr>
+
+      <h2>Going Deeper: Five New Features</h2>
+
+      <p>For this episode I added five features the base Poisson model doesn't capture. Each one has empirical grounding; none of them are arbitrary.</p>
+
+      <h3>Feature 1: Confirmed Lineup — FC 26 Player Composites</h3>
+
+      <p>Using confirmed starting XIs (not predicted), I computed attacking and defensive composite scores from FC 26 player ratings. Attack composite = average of Shooting + Dribbling divided by 2. Defense composite = average DEF rating. Both normalized against a baseline of 72.</p>
+
+      <div class="lineup-block">
+        <span class="lineup-team">🇫🇷 France (4-2-3-1) — Confirmed</span>
+        GK Maignan &nbsp;|&nbsp; Kounde &nbsp;Upamecano &nbsp;Saliba &nbsp;Digne<br>
+        Tchouam&eacute;ni &nbsp;Rabiot &nbsp;|&nbsp; Demb&eacute;l&eacute; &nbsp;Olise &nbsp;<span class="key-player">Barcola</span><br>
+        <span class="key-player">Mbapp&eacute;</span><br>
+        <br>
+        ATK composite: <strong>83.7</strong> &nbsp;&nbsp; DEF composite: <strong>82.4</strong>
+      </div>
+
+      <div class="lineup-block">
+        <span class="lineup-team">🇪🇸 Spain (4-3-3) — Confirmed</span>
+        GK Sim&oacute;n &nbsp;|&nbsp; Porro &nbsp;Cubarsi &nbsp;Laporte &nbsp;Cucurella<br>
+        <span class="key-player">Rodri</span> &nbsp;Fabi&aacute;n &nbsp;|&nbsp; <span class="key-player">Yamal</span> &nbsp;DaniOlmo &nbsp;Baena<br>
+        Oyarzabal<br>
+        <br>
+        ATK composite: <strong>81.8</strong> &nbsp;&nbsp; DEF composite: <strong>82.6</strong>
+      </div>
+
+      <p>France starts <strong>Barcola</strong> over Dou&eacute; — a meaningful difference (Dou&eacute; rates slightly higher in FC 26 at 79/83 vs Barcola's 77/80). France's ATK edge comes primarily from Mbapp&eacute; (94/92 SHO/DRI), the highest-rated active player at this tournament. Spain's slight DEF edge comes from Rodri (88 DEF) anchoring the midfield — the best defensive midfielder on the field.</p>
+
+      <p>Quality multipliers: France generating chances against Spain's defense → <strong>1.019&times;</strong>. Spain generating chances against France's defense → <strong>0.993&times;</strong>. A near-wash — these two teams are structurally matched at an elite level.</p>
+
+      <h3>Feature 2: Finishing Efficiency (50% regressed)</h3>
+      <p>Goals scored versus expected goals for the tournament:</p>
+      <ul>
+        <li><strong>France:</strong> 16 goals on 14.3 xGF → 1.12× conversion. Regressed 50% toward 1.0 → <span class="delta-pill">+5.9%</span> multiplier on France's &lambda;</li>
+        <li><strong>Spain:</strong> 11 goals on 12.1 xGF → 0.91× conversion. Regressed 50% toward 1.0 → <span class="delta-pill neg">−4.4%</span> multiplier on Spain's &lambda;</li>
+      </ul>
+      <p>Full regression would assume all finishing is luck. Full credit would assume it's all skill. 50% is the pragmatic middle: Mbapp&eacute;'s 26.7% conversion rate on 30 shots across the tournament isn't luck.</p>
+
+      <h3>Feature 3: Shot Quality (xG per shot on target)</h3>
+      <p>Not all xG is created equal. France's average xG per shot on target is <strong>0.304</strong> vs the World Cup average of 0.22. That's not just volume — it's shot selection. Closer to goal, better angles, less defensive pressure when pulling the trigger. This adds a <span class="delta-pill">+5.7%</span> multiplier to France's attack. Spain at 0.26 xG/SOT adds a <span class="delta-pill">+2.7%</span>.</p>
+
+      <h3>Feature 4: Fatigue Adjustment</h3>
+      <p>France's quarterfinal was played July 9. Spain's was July 10. France had <strong>one extra rest day</strong> heading into the semifinal. At elite level, the marginal effect is small but measurable — estimated at roughly 1.5% per extra rest day. France: <span class="delta-pill">+1.5%</span>. Spain: no adjustment.</p>
+
+      <h3>Feature 5: Form Momentum</h3>
+      <p>Comparing each team's quality-adjusted xGF across the last three versus first three games of the tournament:</p>
+      <ul>
+        <li><strong>France:</strong> first 3 games avg 1.50 adj. xGF/game → last 3 games avg 1.90. Trend: improving. <span class="delta-pill">+2.7%</span></li>
+        <li><strong>Spain:</strong> first 3 games avg 1.36 → last 3 games avg 1.83. Also improving. <span class="delta-pill">+3.5%</span></li>
+      </ul>
+      <p>Momentum sensitivity is set at 10% — enough to register a meaningful peak without overclaiming a linear trend across only 6 games.</p>
+
+      <hr>
+
+      <h2>Adding the Market Signal</h2>
+
+      <p>One thing I couldn't do with a pure Poisson model: access the information embedded in <em>actual money</em>. Prediction markets aggregate the views of thousands of participants, some of whom have information I don't. I pulled odds from three sources and converted to implied probabilities.</p>
+
+      <table class="ensemble-table">
+        <thead>
+          <tr>
+            <th>Signal</th>
+            <th>France advances</th>
+            <th>Spain advances</th>
+            <th>Weight</th>
+            <th>Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Enhanced Poisson</strong></td>
+            <td>56.8%</td>
+            <td>43.2%</td>
+            <td>20%</td>
+            <td>Structural model, corrected + 5 features</td>
+          </tr>
+          <tr>
+            <td><strong>FanDuel Sportsbook</strong></td>
+            <td>57.3%</td>
+            <td>42.7%</td>
+            <td>20%</td>
+            <td>Sharp money, professional pricing</td>
+          </tr>
+          <tr>
+            <td><strong>Kalshi</strong></td>
+            <td>59.0%</td>
+            <td>41.0%</td>
+            <td>30%</td>
+            <td>CFTC-regulated, $8.3M volume, no house edge</td>
+          </tr>
+          <tr>
+            <td><strong>Robinhood Prediction Mkt</strong></td>
+            <td>59.2%</td>
+            <td>40.8%</td>
+            <td>20%</td>
+            <td>High volume, slight retail sentiment bias</td>
+          </tr>
+          <tr>
+            <td><strong>Pundit Consensus</strong></td>
+            <td>54.0%</td>
+            <td>46.0%</td>
+            <td>10%</td>
+            <td>Expert opinion, least falsifiable</td>
+          </tr>
+          <tr class="ensemble-total">
+            <td><strong>5-Signal Ensemble</strong></td>
+            <td><strong>57.8%</strong></td>
+            <td><strong>42.2%</strong></td>
+            <td><strong>100%</strong></td>
+            <td>Weighted average, 5.2pp signal range</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Kalshi gets the highest weight (30%) because it is CFTC-regulated, has no house edge baked into the margin, and had $8.3M in trading volume on this match — large enough to represent real information. Robinhood gets down-weighted slightly (20%) because the 8.4:1 France:Spain trading volume ratio suggests some retail crowd sentiment. Pundits get the lowest weight (10%) — they are the least falsifiable signal in the set.</p>
+
+      <p>The range across all five sources is <strong>5.2 percentage points</strong> (54.0% to 59.2%), with a standard deviation of 1.9pp. When five completely independent methods land in a tight window, the consensus is meaningful. This isn't noise canceling out — it's convergence.</p>
+
+      <hr>
+
+      <h2>The Prediction</h2>
+
+      <h3>Model evolution: corrected base vs. enhanced</h3>
+
+      <div class="scenario-grid">
+        <div class="scenario-card">
+          <div class="scenario-card__title">Base Corrected Model (3 fixes only)</div>
+          <div class="scenario-card__row"><span>France 90-min win</span><span style="color:#00d47a;">37.3%</span></div>
+          <div class="scenario-card__row"><span>Goes to penalties</span><span style="color:#f0c040;">24.1%</span></div>
+          <div class="scenario-card__row"><span>Spain 90-min win</span><span style="color:#ff3333;">38.6%</span></div>
+          <div class="scenario-card__row"><span>&lambda; France</span><span>1.517</span></div>
+          <div class="scenario-card__row"><span>&lambda; Spain</span><span>1.510</span></div>
+          <div class="scenario-card__row"><span><strong>France advances</strong></span><span style="color:#00d47a;"><strong>50.5%</strong></span></div>
+        </div>
+        <div class="scenario-card">
+          <div class="scenario-card__title">Enhanced Model (+ lineup + 5 features)</div>
+          <div class="scenario-card__row"><span>France 90-min win</span><span style="color:#00d47a;">43.6%</span></div>
+          <div class="scenario-card__row"><span>Goes to penalties</span><span style="color:#f0c040;">22.7%</span></div>
+          <div class="scenario-card__row"><span>Spain 90-min win</span><span style="color:#ff3333;">33.6%</span></div>
+          <div class="scenario-card__row"><span>&lambda; France</span><span>1.771</span></div>
+          <div class="scenario-card__row"><span>&lambda; Spain</span><span>1.535</span></div>
+          <div class="scenario-card__row"><span><strong>France advances</strong></span><span style="color:#00d47a;"><strong>56.8%</strong></span></div>
+        </div>
+      </div>
+
+      <p>The base corrected model gives a near coin-flip (50.5/49.5). Adding real lineup data, finishing efficiency, shot quality, fatigue, and form momentum shifts it to 56.8% France. The five additional features add 6.3 percentage points of France edge — most of that driven by Mbapp&eacute;'s finishing quality and France's shot selection superiority.</p>
+
+      <h3>Five-signal ensemble result</h3>
+
+      <div class="prob-grid">
+        <div class="prob-card">
+          <div class="prob-card__pct" style="color:#00d47a;">57.8%</div>
+          <div class="prob-card__label">France advances</div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-card__pct" style="color:#f0c040;">22.7%</div>
+          <div class="prob-card__label">Goes to penalties</div>
+        </div>
+        <div class="prob-card">
+          <div class="prob-card__pct" style="color:#ff3333;">42.2%</div>
+          <div class="prob-card__label">Spain advances</div>
+        </div>
+      </div>
+
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:-0.5rem;"><em>Note: advances % include a share of penalty shootout outcomes. France wins pens ~58% of the time if it reaches that stage (derived from France's superior finishing efficiency). The 22.7% penalty probability is embedded in both advance figures.</em></p>
+
+      <h3>Most likely scorelines (enhanced model)</h3>
+
+      <table class="data-table">
+        <thead>
+          <tr><th>Scoreline</th><th>Probability</th><th>Outcome</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>1–1</strong></td><td>10.0%</td><td>&rarr; Penalties</td></tr>
+          <tr><td><strong>2–1 France</strong></td><td>8.9%</td><td>France win</td></tr>
+          <tr><td><strong>1–2 Spain</strong></td><td>7.7%</td><td>Spain win</td></tr>
+          <tr><td><strong>1–0 France</strong></td><td>6.5%</td><td>France win</td></tr>
+          <tr><td><strong>2–0 France</strong></td><td>5.8%</td><td>France win</td></tr>
+          <tr><td><strong>0–1 Spain</strong></td><td>5.7%</td><td>Spain win</td></tr>
+          <tr><td><strong>2–2</strong></td><td>4.8%</td><td>&rarr; Penalties</td></tr>
+        </tbody>
+      </table>
+
+      <p>1–1 is the modal scoreline at 10%. The two most likely individual results (2–1 France and 1–2 Spain) are separated by just 1.2 percentage points. At the semifinal stage, these teams are genuinely close. The ensemble gives France the edge — but not comfortably.</p>
+
+      <hr>
+
+      <h2>The Mbapp&eacute; Factor</h2>
+
+      <p>One thing the model captures indirectly through finishing efficiency and shot quality, but which is worth stating explicitly: <strong>Kylian Mbapp&eacute; has been the best individual performer at this World Cup</strong>. Eight goals. Three assists. Thirty shots across six games. 26.7% conversion rate — not just volume, but efficiency.</p>
+
+      <p>In FC 26 terms, Mbapp&eacute; rates 94 SHO / 92 DRI — the highest attacking composite of any active player at the tournament. The model uses this through the player composite multiplier, but it doesn't capture the psychological weight of a player opponents must double-mark even when out of possession. That's a real edge the numbers understate.</p>
+
+      <p>Spain's answer is structural: <strong>Rodri</strong> anchoring the midfield at 88 DEF, reducing the spaces Mbapp&eacute; typically exploits in transition. The tactical duel between Mbapp&eacute; on the break and Rodri cutting passing lanes might decide this match more than any other individual factor.</p>
+
+      <hr>
+
+      <div class="callout warning">
+        <p><strong>What the model still can't see:</strong></p>
+        <ul>
+          <li>Tactical shape — Spain's 4-3-3 is designed to suffocate vertical transitions, which is exactly how France generate their best xG (Mbapp&eacute; running in behind)</li>
+          <li>Yamal on the right side against Digne — a significant pace mismatch the Poisson model ignores entirely</li>
+          <li>Set piece quality — both teams are elite from dead balls, and the model treats every goal attempt equally regardless of delivery type</li>
+          <li>Manager decisions: Deschamps is conservative late in matches; Luis Enrique's Spain is positionally aggressive. Tactical intent diverges when matches are level</li>
+          <li>Penalty shootout variance — even with France at 58% in pens, a five-kick shootout is still close to a coin flip in any single realization</li>
+        </ul>
+      </div>
+
+      <p>France 57.8%. Spain 42.2%. My model says France — but this is not a prediction I'm confident in the way I'd want to be. The signal convergence is real; the uncertainty is also real. Either team winning would not surprise any honest observer of this tournament.</p>
+
+      <p>What I know now that I didn't know in Episode 1: the numbers are honest about what they don't know. A 57.8% probability isn't a prediction that France wins. It's a statement that if this match were played 100 times under identical conditions, France would probably win about 58 of them. The other 42 go to Spain. Watch the match like someone who's read both sides of that sentence.</p>
+
+      <div class="series-nav">
+        <div class="series-nav__label">World Cup 2026 &middot; Data Series</div>
+        <ul class="series-nav__list">
+          <li><span class="ep-badge">1</span> <a href="wc2026-ep1-i-dont-watch-football.html">I Don't Watch Football. So I Used Data Science to Fix That.</a></li>
+          <li><span class="ep-badge">2</span> Player Twins: Finding Mbapp&eacute;&rsquo;s Statistical Doppelg&auml;nger <em style="font-size:0.8em;">&mdash; coming soon</em></li>
+          <li><span class="ep-badge">3</span> <a href="wc2026-ep3-usa-vs-bosnia.html">USA vs Bosnia: A Match Prediction Built on Poisson, Bayes, and FC 26</a></li>
+          <li><span class="ep-badge">4</span> <a href="wc2026-ep4-usa-vs-belgium.html">USA vs Belgium: The Balogun Effect &mdash; What the Data Actually Says</a></li>
+          <li class="active"><span class="ep-badge current">5</span> France vs Spain: I Found a Bug in My Model &mdash; and Five Signals Agreed Anyway <em style="font-size:0.8em;color:var(--accent);">&larr; you are here</em></li>
+          <li><span class="ep-badge upcoming">6</span> World Cup Wrap-Up: What 18,000 Players and 100,000 Simulations Taught Me</li>
+        </ul>
+      </div>
+
+      <div class="stack-note">
+        <p><em>Built with: Python &middot; RealGM xG Tracker (WC 2026 live data) &middot; FC 26 player composites &middot; Bayesian Poisson &middot; Dixon-Coles &middot; Monte Carlo (100k simulations) &middot; Kalshi &middot; FanDuel &middot; Robinhood prediction markets &nbsp;&middot;&nbsp; Code: <a href="https://github.com/vgaikwad2910" target="_blank" rel="noopener" style="color:var(--accent);">github.com/vgaikwad2910</a></em></p>
+        <p><em>Vaishnavi Gaikwad is a Senior Data Scientist at Intuit, working on QuickBooks digital self-help. These projects are personal explorations built outside of work.</em></p>
+      </div>
+
+    </div>
+  </article>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <p class="footer__text">&copy; 2026 Vaishnavi Gaikwad. Built with care.</p>
+      <ul class="footer__links">
+        <li><a href="https://www.linkedin.com/in/vaishnavi-gaikwad-23506481/" target="_blank">LinkedIn</a></li>
+        <li><a href="https://github.com/vgaikwad2910" target="_blank">GitHub</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
